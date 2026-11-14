@@ -60,6 +60,22 @@ details.book summary{cursor:pointer;font-weight:700}details.book ol{padding-left
 .prompt{background:#0f1215;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:18px;line-height:1.5;max-height:180px;overflow:auto;margin:8px 0}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .mob{display:none;padding:10px 16px;background:#3d3112;color:var(--warn);font-size:13px}
+
+.steps{display:flex;gap:6px;margin-left:14px;flex-wrap:wrap}.st{padding:6px 13px;border-radius:999px;background:var(--card2);color:var(--muted);font-weight:700;font-size:12.5px;border:1px solid var(--line);cursor:pointer}.st.on{background:var(--brand);border-color:var(--brand);color:#fff}.st.ok{color:var(--brand)}
+.wrap2{display:grid;grid-template-columns:420px minmax(0,1fr);gap:14px;padding:14px 16px;align-items:start}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 8px}.chip{padding:5px 11px;border-radius:999px;border:1px solid var(--line);background:var(--card2);font-size:12.5px;cursor:pointer;user-select:none}.chip.on{border-color:var(--brand);background:#123d27;color:#7ee2a8}
+.lbl{font-size:12px;color:var(--muted);font-weight:700;margin-top:6px}
+.hook{border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin-bottom:7px;background:var(--card2);cursor:pointer}.hook.on{border-color:var(--brand);box-shadow:0 0 0 1px var(--brand) inset}.hook small{display:block;color:var(--muted);font-size:11.5px}
+.hd{display:grid;grid-template-columns:96px 1fr 300px;font-size:11.5px;color:var(--muted);font-weight:700;padding:0 12px 6px}
+.sec{display:grid;grid-template-columns:96px 1fr 300px;border-top:1px solid var(--line)}.sec>div{padding:10px 12px}
+.sec .tag{font-weight:800;font-size:12px}.sec .tag i{display:block;font-style:normal;color:var(--muted);font-weight:600;font-size:11px}.sec .tag i.tc{color:#ffb86b}
+.sec .say{font-size:14px;outline:none;border-radius:8px}.sec .say:focus,[data-shot]:focus{background:#0f1215;box-shadow:0 0 0 1px var(--brand);outline:none}
+.shot{background:#0f1215;border:1px dashed #3a414c;border-radius:10px;padding:8px 10px;font-size:12.5px}.shot b{color:#7ec3ff}.shot small{display:block;color:var(--muted)}
+.slot{display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid #22262d}.slot .sn{width:24px;height:24px;border-radius:50%;background:#2a2f38;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;flex:none}.slot.ok .sn{background:var(--brand);color:#fff}
+.slot .st2{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.slot select{width:100%;background:#0f1215;border:1px solid var(--line);border-radius:7px;padding:3px 5px;font-size:12px;margin-top:3px}
+.tp{background:#000}.tpbox{width:min(900px,96vw);height:92vh;display:flex;flex-direction:column}.tptext{flex:1;overflow:auto;font-weight:700;line-height:1.5;padding:30vh 20px 0;text-align:center}.tptext small{display:block;font-size:14px;color:var(--brand)}.tptext p{margin:0 0 28px}
+.tpbar{display:flex;gap:12px;align-items:center;padding:10px;border-top:1px solid var(--line)}
+@media (max-width:1150px){.wrap2{grid-template-columns:1fr}}
 @media (max-width:1150px){.wrap{grid-template-columns:320px 1fr}.wrap .right{grid-column:1 / -1}.stage{position:static}}
 @media (max-width:760px){.wrap{grid-template-columns:1fr}.mob{display:block}}
 </style>
@@ -68,7 +84,7 @@ details.book summary{cursor:pointer;font-weight:700}details.book ol{padding-left
 <div id="app"></div>
 <script type="module">
 /* ===================== DỰNG VIDEO – OPPO MIỀN ĐÔNG (Đợt 1) ===================== */
-const VERSION = '2026.11.14-1545';
+const VERSION = '2026.11.14-1730';
 const W = 1080, H = 1920, FPS = 30;
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -94,22 +110,46 @@ const BOOK = [
   ['Âm thanh', 'Giọng nói là chính, nhạc nền nhỏ và tự hạ khi có giọng. Hiệu ứng whoosh khi chuyển cảnh, pop khi chữ nổi xuất hiện.'],
   ['Thời lượng', 'Ngắn mà đủ ý tốt hơn dài. 25–45s dễ xem hết; tối đa 60s. Video xem hết + xem lại được đẩy mạnh nhất.'],
 ];
-const HOOK_WORDS = ['bạn có biết', 'tại sao', 'vì sao', 'đừng', 'sai lầm', 'bí mật', 'mẹo', 'cách', 'chỉ cần', 'ngay', 'miễn phí', 'không ai', 'ít ai', 'đây là', 'thử', 'sự thật', 'quá', 'đỉnh', 'cực', 'nhất', 'ai mà', 'có ai', 'hết', 'liệu', 'giảm', 'tặng', 'mới', '?', '!'];
+const HOOK_WORDS = ['bạn có biết', 'tại sao', 'vì sao', 'đừng', 'sai lầm', 'bí mật', 'mẹo', 'cách', 'chỉ cần', 'ngay', 'miễn phí', 'không ai', 'ít ai', 'đây là', 'thử', 'sự thật', 'quá', 'đỉnh', 'cực', 'nhất', 'ai mà', 'có ai', 'hết', 'liệu', 'giảm', 'tặng', 'mới', 'tin không', 'thật không', 'khác biệt', 'được gì', 'dám', 'vs', '?', '!'];
 const KEY_WORDS = ['camera', 'pin', 'sạc', 'màn hình', 'chống nước', 'ai', 'zoom', 'chụp', 'quay', 'chip', 'ram', 'bền', 'nhanh', 'mỏng', 'nhẹ', 'trả góp', 'giảm', 'tặng', 'quà', 'bảo hành', 'đêm', 'chân dung', 'selfie', 'mah', 'w', 'mp', 'gb', 'hz', 'ip68', 'ip69', 'reno', 'find', 'oppo'];
 const POINT_RE = /^(thứ nhất|thứ hai|thứ ba|đầu tiên|tiếp theo|cuối cùng|thêm nữa|ngoài ra|một là|hai là|ba là|số \d|\d[.)])/i;
 
 /* ---------- Kiểu dựng (phương án) ---------- */
 const STYLES = {
-  A: { key: 'A', name: 'Gọn – rõ ý', desc: 'Giữ thứ tự lời nói, cắt gọn, zoom nhẹ, chuyển cảnh sạch.', face: [2.4, 3.6], br: [1.8, 2.8], trans: 'cut', bpm: 100, every: 7, cap: 'box', grade: 'contrast(1.06) saturate(1.1)', hookFirst: false, teaser: false },
-  B: { key: 'B', name: 'Năng lượng cao', desc: 'Đưa câu "câu khách" nhất lên đầu, cắt nhanh, nháy sáng + rung, chữ bật từng từ.', face: [1.6, 2.6], br: [1.3, 2.1], trans: 'flash', bpm: 124, every: 5, cap: 'pop', grade: 'contrast(1.12) saturate(1.25)', hookFirst: true, teaser: false },
-  C: { key: 'C', name: 'Điện ảnh – teaser', desc: 'Mở bằng cảnh điện thoại đẹp nhất + tiêu đề, chuyển zoom mượt, màu trầm.', face: [2.6, 3.8], br: [2.2, 3.2], trans: 'zoom', bpm: 90, every: 8, cap: 'karaoke', grade: 'contrast(1.05) saturate(0.92) brightness(1.03)', hookFirst: false, teaser: true },
+  A: { key: 'A', name: 'Gọn – cuốn', desc: 'Giữ thứ tự lời nói, lia nhoè chuyển cảnh, chữ nổi nền màu, mặt người trong khung tròn.', face: [2.2, 3.4], br: [1.8, 2.6], trans: ['whip', 'cut', 'whip', 'leak'], bpm: 104, every: 6, cap: 'hl', grade: 'contrast(1.07) saturate(1.12)', hookFirst: false, teaser: false, pip: 0.55, split: 0.15, mood: 'vui' },
+  B: { key: 'B', name: 'Năng lượng cao', desc: 'Câu câu khách nhất lên đầu, cắt nhanh, glitch + nháy sáng, chữ bật từng từ, chia đôi màn hình.', face: [1.6, 2.5], br: [1.3, 2.1], trans: ['glitch', 'flash', 'whip', 'glitch'], bpm: 124, every: 5, cap: 'pop', grade: 'contrast(1.12) saturate(1.25)', hookFirst: true, teaser: false, pip: 0.35, split: 0.3, shake: true, mood: 'soi-dong' },
+  C: { key: 'C', name: 'Điện ảnh – teaser', desc: 'Mở bằng cảnh đẹp nhất + tiêu đề, zoom mượt, vệt sáng, hạt phim, màu trầm.', face: [2.6, 3.8], br: [2.2, 3.2], trans: ['zoom', 'leak', 'zoom'], bpm: 90, every: 7, cap: 'karaoke', grade: 'contrast(1.05) saturate(0.92) brightness(1.03)', hookFirst: false, teaser: true, pip: 0.2, split: 0.4, grain: true, mood: 'dien-anh' },
 };
+const EMOJI = [[/chụp|ảnh|camera|máy ảnh/, '📸'], [/đêm|tối/, '🌙'], [/pin|mah/, '🔋'], [/sạc|nhanh|\d+w\b/, '⚡'], [/màn hình|lướt/, '📱'], [/quà|tặng/, '🎁'], [/giá|giảm|rẻ|trả góp|ưu đãi|khuyến mãi/, '💸'], [/đẹp|sang|xịn/, '✨'], [/mỏng|nhẹ/, '🪶'], [/bền|nước|mưa/, '💧'], [/game|chip|mượt|hiệu năng/, '🎮'], [/\bai\b/, '🤖'], [/video|quay/, '🎬'], [/selfie|chân dung|da\b/, '🤳'], [/thích|yêu|mê/, '😍'], [/shop|ghé|cửa hàng/, '📍'], [/đỉnh|quá|cực|wow|ngon/, '🔥'], [/tin không|thật không|sao\?|\?$/, '🤔'], [/zoom|xa/, '🔭'], [/cả ngày|lâu/, '⏳']];
+const emojiOf = w => { const s = w.toLowerCase(); for (const [re, e] of EMOJI) if (re.test(s)) return e; return ''; };
+
+/* ---------- Thư viện công thức kịch bản (không cần AI) ---------- */
+const FEATS = [
+  { k: /chụp đêm|ban đêm|buổi tối|đêm/i, label: 'Chụp đêm', hook: 'Chụp đêm mà như ban ngày – tin không?', prob: 'Đi chơi tối chụp hình hay bị tối, nhoè, bật flash thì trông rất giả', pt: 'chế độ chụp đêm tự cân sáng, ảnh rõ mà không cần flash', shot: ['Chụp phố đêm / quán cà phê, quay cả màn hình máy lúc bấm chụp', 'Quay từ sau vai, tắt bớt đèn cho thấy ảnh vẫn sáng · 4–5s'] },
+  { k: /chân dung|selfie|tự sướng|xoá phông|da /i, label: 'Chân dung', hook: 'Chụp chân dung đẹp như studio chỉ bằng điện thoại?', prob: 'Chụp chân dung bằng điện thoại hay bị bết da, phông nền rối', pt: 'chụp chân dung xoá phông mượt, da vẫn tự nhiên', shot: ['Chụp chân dung 1 bạn, quay cả màn hình máy lúc bấm chụp', 'Hiện kết quả ảnh · 4–6s'] },
+  { k: /camera|chụp|ảnh|\d+ ?mp|zoom/i, label: 'Camera', hook: 'Zoom xa thế này mà vẫn nét căng?', prob: 'Chụp hình gửi bạn bè mà ảnh mờ, zoom vào là vỡ hết', pt: 'camera chụp siêu nét, zoom xa vẫn rõ từng chi tiết', shot: ['Cận cụm camera, xoay máy thật chậm', 'Đủ sáng, nền gọn · 3–5s'] },
+  { k: /pin|mah|cả ngày/i, label: 'Pin trâu', hook: 'Một ngày không cần sạc – có thật không?', prob: 'Đang dùng giữa chừng thì máy báo hết pin', pt: 'pin dùng thoải mái cả ngày, tối về vẫn còn', shot: ['Cận màn hình hiện % pin buổi tối', 'Cầm máy, bật màn hình cho thấy % pin · 3s'] },
+  { k: /sạc|\d+ ?w\b|supervooc/i, label: 'Sạc nhanh', hook: 'Cắm sạc đi tắm, ra là đầy pin?', prob: 'Chờ sạc cả tiếng mới đầy, gấp đi là không kịp', pt: 'sạc siêu nhanh, cắm một lát là đủ dùng cả buổi', shot: ['Cắm sạc, cận màn hình % pin tăng', 'Quay cận cổng sạc rồi màn hình · 3–4s'] },
+  { k: /màn hình|hz|hiển thị|amoled/i, label: 'Màn hình', hook: 'Lướt TikTok ngoài nắng vẫn rõ – thử luôn nè!', prob: 'Ra nắng là màn hình tối om, nhìn không thấy gì', pt: 'màn hình sáng rõ, lướt mượt, ra nắng vẫn đẹp', shot: ['Lướt TikTok / ảnh trên máy, quay nghiêng có ánh sáng', '4s'] },
+  { k: /mỏng|nhẹ|thiết kế|màu|cầm/i, label: 'Thiết kế', hook: 'Cầm lên là không muốn bỏ xuống!', prob: 'Điện thoại cầm nặng tay, nhìn thì đại trà', pt: 'thiết kế mỏng nhẹ, màu sang, cầm rất sướng tay', shot: ['Tay cầm máy xoay các góc, ánh sáng lướt qua lưng máy', '4–5s'] },
+  { k: /bền|rơi|chống nước|nước|ip6/i, label: 'Siêu bền', hook: 'Đổ nước lên điện thoại – dám không?', prob: 'Lỡ làm rơi, dính mưa là lo máy hư', pt: 'máy bền, kháng nước kháng bụi, đi mưa không lo', shot: ['Nhỏ vài giọt nước lên mặt máy / để cạnh ly nước', '3–4s'] },
+  { k: /game|hiệu năng|chip|ram|lag|giật/i, label: 'Hiệu năng', hook: 'Chơi game cả buổi không giật – thử nha!', prob: 'Chơi game một lát là máy nóng, giật lag', pt: 'chip mạnh, chơi game hay mở nhiều app vẫn mượt', shot: ['Chơi game / mở nhanh nhiều app liên tục', '4–5s'] },
+  { k: /\bai\b|trí tuệ|xoá vật|xóa vật|chỉnh ảnh/i, label: 'AI', hook: 'Xoá người thừa trong ảnh chỉ 1 chạm?', prob: 'Ảnh đẹp mà dính người lạ phía sau', pt: 'AI xoá vật thể thừa, chỉnh ảnh chỉ một chạm', shot: ['Quay màn hình dùng AI xoá người thừa trong ảnh', '5s'] },
+  { k: /quà|tặng|giảm|giá|khuyến mãi|trả góp|ưu đãi|sale/i, label: 'Ưu đãi', hook: 'Cuối tuần này mua điện thoại được tặng gì?', prob: 'Muốn đổi máy mà sợ giá cao', pt: 'đang có ưu đãi và quà tặng, trả góp nhẹ nhàng', shot: ['Quầy quà tặng / bảng ưu đãi tại shop', '3–4s'] },
+];
+const GOALS = { tinhnang: 'Giới thiệu tính năng', shop: 'Kéo khách tới shop', km: 'Khuyến mãi', tuyen: 'Tuyển PG', life: 'Hậu trường / đời sống' };
+const AUDS = { genz: 'Gen Z, thích chụp ảnh', vp: 'Dân văn phòng', ph: 'Phụ huynh', all: 'Mọi người' };
+const TONES = { vui: 'Vui, năng lượng', pro: 'Chuyên gia', story: 'Kể chuyện' };
+const FORMULAS = { auto: 'Tự chọn', pas: 'Vấn đề → 3 lý do → CTA', ba: 'Trước / Sau', myth: 'Đập tan hiểu lầm', story: 'Kể chuyện' };
+const ORD = ['Thứ nhất', 'Thứ hai', 'Cuối cùng'];
 
 /* ---------- Trạng thái ---------- */
 const S = {
-  api: '', token: '', me: null,
+  api: '', token: '', me: null, step: 1,
   clips: [], music: null, seed: 1,
-  opt: { hook: '', cta: 'Ghé shop OPPO gần nhất trải nghiệm ngay!', brand: 'OPPO MIỀN ĐÔNG', cap: 'auto', maxLen: 58, bar: true, script: '', model: 'Xenova/whisper-small' },
+  opt: { hook: '', cta: 'Ghé shop OPPO gần nhất trải nghiệm ngay!', brand: 'OPPO MIỀN ĐÔNG', cap: 'auto', maxLen: 58, bar: true, script: '', model: 'Xenova/whisper-small', fx: 'full' },
+  plan: { idea: '', goal: 'shop', aud: 'genz', len: 45, tone: 'vui', formula: 'auto', hooks: [], hookIdx: 0, sections: [], links: [], by: '' },
+  slots: {}, sample: null, gemKey: '', lib: [], musicSel: 'auto',
   variants: [], cur: 0,
 };
 let nextId = 1;
@@ -158,75 +198,340 @@ function loginView(err, showApi) {
 function toast(msg, err, ms) { const d = document.createElement('div'); d.className = 'toast' + (err ? ' err' : ''); d.innerHTML = msg; document.body.appendChild(d); setTimeout(() => d.remove(), ms || (err ? 6000 : 3500)); }
 
 /* ---------- Giao diện chính ---------- */
+/* ===================== BƯỚC 1–2: Ý TƯỞNG → KỊCH BẢN → DANH SÁCH CẢNH ===================== */
+function productOf(t) { const m = String(t).match(/\b(reno\s?\d+\s?(pro\+?|f|z)?|find\s?[nx]\d*\s?(pro|flip|fold)?|a\d{1,2}[a-z]?\d?)\b/i); return m ? m[0].trim().replace(/\b\w/g, c => c.toUpperCase()).replace(/\s+/g, ' ') : ''; }
+function featsOf(t) { const out = []; FEATS.forEach(f => { if (f.k.test(t) && !out.includes(f)) out.push(f); }); if (out.some(f => f.label === 'Chụp đêm' || f.label === 'Chân dung')) { const i = out.findIndex(f => f.label === 'Camera'); if (i >= 0 && out.length > 3) out.splice(i, 1); } ['Camera', 'Pin trâu', 'Thiết kế', 'Sạc nhanh'].forEach(l => { if (out.length < 3 && !out.some(f => f.label === l)) out.push(FEATS.find(f => f.label === l)); }); return out; }
+function sentenceCase(s) { s = String(s).trim(); return s.charAt(0).toUpperCase() + s.slice(1); }
+function genScript(P, R) {
+  const idea = P.idea || '', prod = productOf(idea) || 'em này', F = featsOf(idea), gift = /quà|tặng|ưu đãi|giảm|khuyến mãi/i.test(idea), weekend = /cuối tuần/i.test(idea) ? 'Cuối tuần này' : 'Hôm nay';
+  const nha = P.tone === 'vui' ? ' nha' : '', luon = P.tone === 'vui' ? ' luôn' : '';
+  let goal = P.goal, formula = P.formula === 'auto' ? (goal === 'tuyen' || goal === 'life' ? 'story' : ['pas', 'ba', 'myth', 'pas'][Math.floor(R() * 4)]) : P.formula;
+  const ctaBy = { shop: `${weekend} ghé shop OPPO gần nhất chụp thử ${prod}${luon}${gift ? ', còn có quà nữa' : ''}${nha}!`, tinhnang: `Bạn thích tính năng nào nhất? Comment cho mình biết${nha}!`, km: `Ưu đãi có hạn, ${weekend.toLowerCase()} ghé shop OPPO gần nhất${nha}!`, tuyen: `Nhắn tin cho page hoặc ghé shop gần nhất để ứng tuyển${nha}!`, life: `Follow để xem tiếp hậu trường${nha}!` };
+  const cta = ctaBy[goal] || ctaBy.shop;
+  const nPts = P.len <= 30 ? 2 : 3;
+  let hooks, secs = [];
+  const shopShot = { title: 'Mặt tiền shop / quầy trải nghiệm, vẫy tay mời', tip: '3–4s · có thể quay PG cầm máy mời khách' };
+  if (goal === 'tuyen' || goal === 'life') {
+    const tuyen = goal === 'tuyen';
+    hooks = tuyen ? ['Làm PG điện thoại thì được gì? Nghe mình kể nè!', 'Mới ra trường, không kinh nghiệm vẫn làm được việc này?', '3 lý do mình chọn làm PG OPPO'] : ['Một ngày làm PG OPPO sẽ như thế nào?', 'Hậu trường shop điện thoại mà ít ai thấy', '5 giờ chiều ở shop OPPO trông như vầy nè'];
+    const pts = tuyen ? [['Thu nhập', 'thu nhập ổn định, có thưởng theo doanh số', 'Bảng thưởng / khoảnh khắc nhận thưởng (không lộ số tiền)'], ['Được đào tạo', 'được đào tạo bài bản, chưa biết gì cũng không sao', 'Buổi training, trainer hướng dẫn'], ['Môi trường', 'môi trường trẻ, đồng nghiệp vui, ngày nào cũng có chuyện để cười', 'Cả team chụp hình / cười đùa ở shop']]
+      : [['Buổi sáng', 'sáng ra là dọn quầy, lau máy trưng bày cho thật đẹp', 'Lau máy trưng bày, sắp xếp quầy'], ['Tư vấn', 'trưa chiều là giờ tư vấn, khách hỏi gì cũng phải trả lời được', 'PG tư vấn khách (xin phép khách)'], ['Kết ca', 'tối chốt số, cả team chụp một tấm kỷ niệm', 'Cả team chụp hình cuối ngày']];
+    secs.push({ part: 'MỞ ĐẦU', label: '', say: tuyen ? `Mình làm PG OPPO được một thời gian rồi, và đây là những điều mình thích nhất.` : `Theo mình một ngày ở shop${luon}${nha}.`, shot: { title: 'Toàn cảnh shop, đi bộ vào từ cửa', tip: 'Quay liền mạch 4–5s' } });
+    pts.slice(0, nPts).forEach((p, i) => secs.push({ part: 'Ý ' + (i + 1), label: p[0], say: `${ORD[i === nPts - 1 && i > 0 ? 2 : i]}, ${p[1]}.`, shot: { title: p[2], tip: '3–5s' } }));
+  } else {
+    hooks = [F[0].hook, formula === 'myth' ? `Ai bảo điện thoại tầm trung ${F[0].label.toLowerCase()} không ngon?` : `Đừng vội mua điện thoại mới khi chưa xem video này!`, prod !== 'em này' ? `Máy cũ vs ${prod}: khác biệt ở ${F[0].label.toLowerCase()}` : `${nPts} lý do chiếc máy này đáng tiền nhất lúc này`];
+    if (formula === 'ba') {
+      secs.push({ part: 'TRƯỚC', label: '', say: sentenceCase(F[0].prob) + '.', shot: { title: 'Máy cũ / ảnh cũ bị lỗi (tối, nhoè, hết pin…)', tip: 'Quay nhanh 3s, càng "thảm" càng tốt' } });
+      secs.push({ part: 'SAU', label: '', say: `Còn đây là ${prod}${luon}, nhìn khác biệt liền.`, shot: { title: 'Cùng góc đó nhưng chụp / dùng bằng máy mới', tip: '3–4s, để 2 cảnh liền nhau' } });
+    } else if (formula === 'myth') {
+      secs.push({ part: 'SỰ THẬT', label: '', say: `Sự thật là ${prod} làm được hết, mình thử cho xem${luon}.`, shot: { title: 'Cầm máy giơ lên, chuẩn bị thử', tip: '3s' } });
+    } else if (formula === 'story') {
+      secs.push({ part: 'CÂU CHUYỆN', label: '', say: `Hôm qua có khách ghé shop than: ${F[0].prob.charAt(0).toLowerCase() + F[0].prob.slice(1)}. Mình đưa ${prod} cho thử luôn.`, shot: { title: 'PG đưa máy cho khách thử tại quầy', tip: '4s, xin phép khách nếu lộ mặt' } });
+    } else {
+      secs.push({ part: 'VẤN ĐỀ', label: '', say: sentenceCase(F[0].prob) + '.', shot: { title: 'Tay cầm máy loay hoay / ảnh bị lỗi', tip: 'Quay từ sau vai · 3–5s' } });
+    }
+    F.slice(0, nPts).forEach((f, i) => secs.push({ part: 'Ý ' + (i + 1), label: f.label, say: `${ORD[i === nPts - 1 && i > 0 ? 2 : i]}, ${f.pt}.`, shot: { title: f.shot[0], tip: f.shot[1] } }));
+    if (P.len >= 55) secs.push({ part: 'BẰNG CHỨNG', label: '', say: `Mình chụp thử luôn nè, nhìn ảnh là biết${nha}.`, shot: { title: 'Lướt các ảnh/video vừa chụp trên máy', tip: '4–5s' } });
+  }
+  secs.unshift({ part: 'HOOK', label: '', say: hooks[0], shot: { title: goal === 'tuyen' || goal === 'life' ? 'Cảnh đẹp nhất của shop / team' : 'Kết quả "wow" nhất (ảnh đêm, zoom xa, % pin…)', tip: 'Cảnh mạnh nhất để mở đầu · 3–4s' } });
+  secs.push({ part: 'CTA', label: '', say: cta, shot: shopShot });
+  return { hooks: hooks.map(h => ({ text: h, why: '' })), sections: secs, formula, by: 'Công thức' };
+}
+async function genScriptAI(P) {
+  const prompt = `Bạn là đạo diễn TikTok cho chuỗi cửa hàng điện thoại OPPO ở Việt Nam. Viết kịch bản video TikTok dọc ${P.len} giây.
+Ý tưởng: ${P.idea}
+Mục tiêu: ${GOALS[P.goal]}. Người xem: ${AUDS[P.aud]}. Giọng điệu: ${TONES[P.tone]}. Công thức: ${P.formula === 'auto' ? 'tự chọn công thức thu hút nhất' : FORMULAS[P.formula]}.
+Quy tắc: hook 0–2s gây tò mò (câu hỏi/con số/so sánh), không chào hỏi. Thân bài 2–3 ý chính bắt đầu bằng "Thứ nhất/Thứ hai/Cuối cùng". CTA rõ 1 hành động. Tổng lời nói ~${Math.round(P.len * 2.6)} chữ, câu ngắn, văn nói tự nhiên tiếng Việt. Mỗi phần có 1 cảnh quay điện thoại/B-roll cụ thể dễ quay tại shop bằng điện thoại.
+Trả JSON: {"hooks":[{"text":"","why":""}] (3 câu hook khác kiểu), "formula":"tên công thức", "sections":[{"part":"HOOK|VẤN ĐỀ|Ý 1|Ý 2|Ý 3|CTA|...","label":"nhãn 1-2 chữ cho ý chính","say":"lời nói","shot":{"title":"cảnh cần quay","tip":"góc quay, độ dài"}}]}. Phần HOOK dùng hook số 1.`;
+  const body = JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: 'application/json', temperature: 1 } });
+  let lastErr;
+  for (const m of ['gemini-2.5-flash', 'gemini-2.0-flash']) {
+    try {
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${encodeURIComponent(S.gemKey)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body });
+      const j = await r.json(); if (j.error) throw new Error(j.error.message);
+      const t = j.candidates[0].content.parts.map(p => p.text || '').join('');
+      const o = JSON.parse(t.replace(/^```json|```$/g, ''));
+      if (!o.sections || !o.sections.length) throw new Error('AI trả kết quả rỗng');
+      o.sections.forEach(s => { s.shot = s.shot || { title: '', tip: '' }; s.label = s.label || ''; });
+      o.hooks = (o.hooks || []).map(h => typeof h === 'string' ? { text: h, why: '' } : h);
+      o.by = 'AI Gemini'; return o;
+    } catch (e) { lastErr = e; }
+  }
+  throw lastErr;
+}
+async function makeScript(again) {
+  const P = S.plan; P.idea = $('#pIdea').value.trim();
+  if (!P.idea) return toast('Nhập ý tưởng video trước nha.', true);
+  const b = $('#pGo'); b.disabled = true; b.textContent = '⏳ Đang lên kịch bản…';
+  let o = null;
+  if (S.gemKey) { try { o = await genScriptAI(P); } catch (e) { toast('AI lỗi (' + esc(e.message).slice(0, 120) + ') – dùng công thức thay thế.', true); } }
+  if (!o) o = genScript(P, rng(Date.now() % 1e6));
+  Object.assign(P, { hooks: o.hooks, hookIdx: 0, sections: o.sections, by: o.by, formulaName: FORMULAS[o.formula] || o.formula || '' });
+  P.hooks.forEach(h => h.score = clamp(Math.round(5 + hookScore(h.text, 0) * 1.1), 5, 10));
+  b.disabled = false; b.textContent = '✨ Lên kịch bản';
+  S.slots = {}; syncScriptToEditor(); drawPlan(); goStep(2);
+}
+function syncScriptToEditor() {
+  const P = S.plan; if (!P.sections.length) return;
+  if (P.hooks[P.hookIdx]) P.sections[0].say = P.hooks[P.hookIdx].text;
+  S.opt.script = P.sections.map(s => s.say).join('\n');
+  const cta = P.sections.find(s => s.part === 'CTA'); if (cta) S.opt.cta = cta.say.replace(/[!.]+$/, '!');
+  S.opt.hook = P.hooks[P.hookIdx] ? P.hooks[P.hookIdx].text : '';
+  const ta = $('#script'); if (ta) { ta.value = S.opt.script; ta.closest('details').open = true; } const oh = $('#oHook'); if (oh) oh.value = S.opt.hook; const oc = $('#oCta'); if (oc) oc.value = S.opt.cta;
+  drawSlots();
+}
+function drawPlan() {
+  const P = S.plan, el = $('#planOut'); if (!el) return;
+  $('#hooks').innerHTML = P.hooks.length ? P.hooks.map((h, i) => `<div class="hook ${i === P.hookIdx ? 'on' : ''}" data-h="${i}">“${esc(h.text)}”<small>${esc(h.why || '')}${h.why ? ' · ' : ''}điểm hook ${h.score}/10</small></div>`).join('') + `<p class="sub" style="margin-top:6px">Công thức: <b style="color:var(--text)">${esc(P.formulaName || '')}</b> · soạn bởi ${esc(P.by)}</p>` : '<p class="sub">Bấm “Lên kịch bản” để có 3 câu hook.</p>';
+  document.querySelectorAll('[data-h]').forEach(d => d.onclick = () => { P.hookIdx = +d.dataset.h; syncScriptToEditor(); drawPlan(); });
+  if (!P.sections.length) { el.innerHTML = '<p class="sub">Kịch bản và danh sách cảnh quay sẽ hiện ở đây.</p>'; return; }
+  let t = 0;
+  el.innerHTML = `<div class="hd"><span>Phần</span><span>🗣️ Lời nói (bạn quay mặt + nói)</span><span>📱 Cảnh điện thoại cần quay</span></div>` + P.sections.map((s, i) => {
+    const d = Math.max(2.5, s.say.split(/\s+/).length / 2.7); const a = t; t += d;
+    return `<div class="sec"><div class="tag">${esc(s.part)}${s.label ? `<i>${esc(s.label)}</i>` : ''}<i class="tc">${Math.round(a)}–${Math.round(t)}s</i></div>
+    <div class="say" contenteditable="true" data-say="${i}">${esc(s.say)}</div>
+    <div><div class="shot"><b>Cảnh ${i + 1}</b> – <span contenteditable="true" data-shot="${i}">${esc(s.shot.title)}</span><small>${esc(s.shot.tip || '')}</small></div></div></div>`;
+  }).join('') + `<p class="sub" style="margin-top:10px">✏️ Bấm vào câu bất kỳ để sửa · Tổng ~${Math.round(t)}s · 1 đoạn người nói (đọc liền một lần theo kịch bản) + ${P.sections.length} cảnh điện thoại</p>`;
+  el.querySelectorAll('[data-say]').forEach(d => d.onblur = () => { const i = +d.dataset.say; P.sections[i].say = cleanText(d.textContent); if (i === 0 && P.hooks[P.hookIdx]) P.hooks[P.hookIdx].text = P.sections[0].say; syncScriptToEditor(); });
+  el.querySelectorAll('[data-shot]').forEach(d => d.onblur = () => { P.sections[+d.dataset.shot].shot.title = cleanText(d.textContent); drawSlots(); });
+}
+function teleprompter() {
+  const P = S.plan; if (!P.sections.length) return toast('Chưa có kịch bản.', true);
+  const ov = document.createElement('div'); ov.className = 'ov tp';
+  ov.innerHTML = `<div class="tpbox"><div class="tptext" id="tpT">${P.sections.map(s => `<p><small>${esc(s.part)}</small>${esc(s.say)}</p>`).join('')}<p style="height:60vh"></p></div>
+    <div class="tpbar"><button class="btn pri" id="tpGo">▶ Chạy chữ</button><label class="sub" style="margin:0">Tốc độ <input type="range" id="tpS" min="10" max="90" value="38"></label><label class="sub" style="margin:0">Cỡ chữ <input type="range" id="tpF" min="24" max="64" value="38"></label><span style="flex:1"></span><button class="btn ghost" id="tpX">Đóng</button></div></div>`;
+  document.body.appendChild(ov);
+  const box = $('#tpT'); let run = false, last = 0;
+  const f = () => box.style.fontSize = $('#tpF').value + 'px'; f(); $('#tpF').oninput = f;
+  const loop = ts => { if (!ov.isConnected) return; if (run && last) box.scrollTop += (ts - last) / 1000 * +$('#tpS').value; last = ts; requestAnimationFrame(loop); }; requestAnimationFrame(loop);
+  $('#tpGo').onclick = () => { run = !run; $('#tpGo').textContent = run ? '⏸ Dừng' : '▶ Chạy chữ'; };
+  $('#tpX').onclick = () => ov.remove();
+}
+function downloadShots() {
+  const P = S.plan; if (!P.sections.length) return;
+  const txt = `KỊCH BẢN TIKTOK – ${P.idea}\n\n` + P.sections.map((s, i) => `[${s.part}${s.label ? ' – ' + s.label : ''}]\nNói: ${s.say}\nCảnh ${i + 1}: ${s.shot.title} (${s.shot.tip || ''})\n`).join('\n') + `\nMẹo: quay dọc 9:16, đủ sáng, mỗi cảnh điện thoại 3–6s, đoạn người nói đọc liền một lần.`;
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + txt], { type: 'text/plain;charset=utf-8' })); a.download = 'kich-ban-canh-quay.txt'; a.click();
+}
+
+/* ---------- Video mẫu: học nhịp cắt, màu, chuyển cảnh ---------- */
+const FX_CATALOG = ['glitch', 'whip', 'flash', 'zoom', 'leak', 'pip', 'split', 'emoji', 'badge', 'ring', 'shake', 'grain', 'confetti', 'pop', 'hl', 'karaoke', 'box'];
+async function analyzeSample(f) {
+  const st = $('#smpSt'); st.textContent = 'Đang xem video mẫu…';
+  const url = URL.createObjectURL(f), v = document.createElement('video'); v.muted = true; v.preload = 'auto'; v.src = url;
+  try {
+    await once(v, 'loadedmetadata');
+    const dur = Math.min(v.duration, 60), step = 0.2, cw = 36, ch = 64, cv = document.createElement('canvas'); cv.width = cw; cv.height = ch; const g = cv.getContext('2d', { willReadFrequently: true });
+    let prev = null; const diffs = [], lums = [], sats = [], keys = [];
+    const kc = document.createElement('canvas'); kc.width = 270; kc.height = 480; const kg = kc.getContext('2d');
+    for (let t = 0.05, i = 0; t < dur; t += step, i++) {
+      v.currentTime = t; await Promise.race([once(v, 'seeked'), sleep(1200)]);
+      g.drawImage(v, 0, 0, cw, ch); const d = g.getImageData(0, 0, cw, ch).data; const cur = new Float32Array(cw * ch); let L = 0, Sa = 0;
+      for (let p = 0, k = 0; p < d.length; p += 4, k++) { const r = d[p], gg = d[p + 1], b = d[p + 2], mx = Math.max(r, gg, b), mn = Math.min(r, gg, b); cur[k] = (0.299 * r + 0.587 * gg + 0.114 * b) / 255; L += cur[k]; Sa += mx ? (mx - mn) / mx : 0; }
+      lums.push(L / cur.length); sats.push(Sa / cur.length);
+      let df = 0; if (prev) { for (let k = 0; k < cur.length; k++) df += Math.abs(cur[k] - prev[k]); df /= cur.length; } diffs.push(df); prev = cur;
+      if (i % Math.max(1, Math.round(dur / step / 6)) === 0 && keys.length < 6) { kg.drawImage(v, 0, 0, 270, 480); keys.push(kc.toDataURL('image/jpeg', 0.7)); }
+      st.textContent = `Đang xem video mẫu… ${Math.round(t / dur * 100)}%`;
+    }
+    const m = diffs.reduce((a, b) => a + b, 0) / diffs.length, sd = Math.sqrt(diffs.reduce((a, b) => a + (b - m) ** 2, 0) / diffs.length);
+    const thr = Math.max(0.08, m + 2.2 * sd); let cuts = 0, lastCut = -9; diffs.forEach((d, i) => { if (d > thr && i * step - lastCut > 0.4) { cuts++; lastCut = i * step; } });
+    const prof = { dur, cuts, cutLen: dur / (cuts + 1), motion: m, lum: lums.reduce((a, b) => a + b, 0) / lums.length, sat: sats.reduce((a, b) => a + b, 0) / sats.length };
+    let effects = [], note = '';
+    if (S.gemKey && keys.length) {
+      st.textContent = 'AI đang xem các khung hình mẫu…';
+      try {
+        const parts = [{ text: `Đây là ${keys.length} khung hình rút từ 1 video TikTok mẫu (theo thứ tự thời gian). Hãy nhận xét phong cách dựng và chọn các hiệu ứng tương đồng từ danh sách: ${FX_CATALOG.join(', ')} (glitch=nhiễu màu, whip=lia nhoè, flash=nháy sáng, zoom=zoom chuyển cảnh, leak=vệt sáng, pip=mặt người khung tròn, split=chia đôi màn hình, emoji, badge=số thứ tự, ring=khoanh tròn, shake=rung, grain=hạt phim, confetti=pháo giấy, pop/hl/karaoke/box=kiểu phụ đề). Trả JSON {"effects":[...],"note":"1-2 câu tiếng Việt mô tả phong cách"}` }].concat(keys.map(k => ({ inline_data: { mime_type: 'image/jpeg', data: k.split(',')[1] } })));
+        const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(S.gemKey)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts }], generationConfig: { responseMimeType: 'application/json' } }) });
+        const j = await r.json(); if (j.error) throw new Error(j.error.message);
+        const o = JSON.parse(j.candidates[0].content.parts.map(p => p.text || '').join(''));
+        effects = (o.effects || []).filter(e => FX_CATALOG.includes(e)); note = o.note || '';
+      } catch (e) { note = 'AI chưa xem được khung hình (' + String(e.message).slice(0, 60) + '), dùng phân tích nhịp/màu.'; }
+    }
+    S.sample = { name: f.name, prof, effects, note, thumbs: keys.slice(0, 4) };
+    drawSample(); toast('Đã học xong video mẫu – có thêm phương án <b>D. Theo mẫu</b> khi đạo diễn.');
+    if (S.variants.length) direct(false);
+  } catch (e) { st.textContent = 'Không đọc được video mẫu: ' + e.message; }
+  v.removeAttribute('src'); v.load(); URL.revokeObjectURL(url);
+}
+function drawSample() {
+  const el = $('#smpSt'); if (!el) return; const s = S.sample; if (!s) { el.textContent = ''; return; }
+  const p = s.prof;
+  el.innerHTML = `<div style="display:flex;gap:6px;margin:6px 0">${s.thumbs.map(t => `<img src="${t}" style="width:44px;height:78px;object-fit:cover;border-radius:6px">`).join('')}</div>
+  ✅ <b>${esc(s.name)}</b>: ${p.cuts} lần cắt / ${Math.round(p.dur)}s (≈ ${p.cutLen.toFixed(1)}s mỗi cảnh) · ${p.motion > 0.06 ? 'chuyển động mạnh' : 'chuyển động nhẹ'} · màu ${p.sat > 0.38 ? 'rực' : p.sat < 0.22 ? 'trầm' : 'tự nhiên'}${s.effects.length ? ' · hiệu ứng: ' + s.effects.join(', ') : ''}${s.note ? '<br>🤖 ' + esc(s.note) : ''}
+  <a href="#" id="smpClr" style="color:var(--muted);margin-left:6px">bỏ mẫu</a>`;
+  $('#smpClr').onclick = e => { e.preventDefault(); S.sample = null; drawSample(); if (S.variants.length) direct(false); };
+}
+function sampleStyle() {
+  const s = S.sample; if (!s) return null; const p = s.prof, E = new Set(s.effects);
+  const c = clamp(p.cutLen, 0.9, 4.5);
+  const fast = c < 1.6, mid = c < 2.6;
+  if (!E.size) { (fast ? ['glitch', 'flash', 'shake', 'pop', 'emoji', 'badge'] : mid ? ['whip', 'pip', 'hl', 'emoji', 'badge', 'ring'] : ['zoom', 'leak', 'split', 'karaoke', 'grain']).forEach(x => E.add(x)); if (p.sat > 0.38) E.add('confetti'); }
+  const trans = ['glitch', 'whip', 'flash', 'zoom', 'leak'].filter(x => E.has(x)); if (!trans.length) trans.push(fast ? 'flash' : 'whip');
+  return { key: 'D', name: 'Theo mẫu', desc: `Học từ “${s.name}”: cảnh ≈ ${c.toFixed(1)}s, ${trans.join(' / ')}.`, face: [c * 0.85, c * 1.35], br: [c * 0.8, c * 1.2], trans, bpm: fast ? 128 : mid ? 108 : 90, every: fast ? 4.5 : 6, cap: ['pop', 'hl', 'karaoke', 'box'].find(x => E.has(x)) || (fast ? 'pop' : 'hl'),
+    grade: p.sat > 0.38 ? 'contrast(1.1) saturate(1.3)' : p.sat < 0.22 ? 'contrast(1.06) saturate(0.85)' : 'contrast(1.07) saturate(1.1)', hookFirst: fast, teaser: !fast && !mid, pip: E.has('pip') ? 0.6 : 0.15, split: E.has('split') ? 0.5 : 0.1, shake: E.has('shake'), grain: E.has('grain'), emoji: E.has('emoji') || !s.effects.length, confetti: E.has('confetti'), mood: fast ? 'soi-dong' : mid ? 'vui' : 'dien-anh' };
+}
+
+/* ---------- Thư viện nhạc (thư mục nhac/ trên GitHub) ---------- */
+async function loadLib() {
+  try { const r = await fetch('nhac/list.json', { cache: 'no-cache' }); if (!r.ok) return; S.lib = (await r.json()).filter(x => x && x.file); } catch (e) { S.lib = []; }
+  drawMusicSel();
+}
+const trackCache = {};
+async function trackBuf(t) { if (!trackCache[t.file]) trackCache[t.file] = fetch('nhac/' + t.file).then(r => { if (!r.ok) throw new Error('Không tải được nhạc'); return r.arrayBuffer(); }).then(b => actx().decodeAudioData(b)); return trackCache[t.file]; }
+function drawMusicSel() {
+  const el = $('#mSel'); if (!el) return;
+  el.innerHTML = `<option value="auto">🎵 Tự chọn theo phương án${S.lib.length ? '' : ' (nhạc tự tạo)'}</option><option value="synth">🎹 Nhạc tự tạo</option>` + S.lib.map((t, i) => `<option value="${i}">${esc(t.name || t.file)}${t.mood ? ' · ' + esc(t.mood) : ''}</option>`).join('') + `<option value="none">🔇 Không nhạc</option>`;
+  el.value = S.musicSel;
+}
+function musicFor(p) {
+  if (S.music) return { buf: S.music.buf, name: S.music.name };
+  if (S.musicSel === 'none') return { none: true };
+  if (S.musicSel === 'synth' || !S.lib.length) return null;
+  if (S.musicSel !== 'auto') return { track: S.lib[+S.musicSel] };
+  const m = p.style.mood, cand = S.lib.filter(t => t.mood === m); const list = cand.length ? cand : S.lib;
+  return { track: list[(p.seed + p.key.charCodeAt(0)) % list.length] };
+}
+
+/* ---------- Bước 3: gắn clip vào từng cảnh ---------- */
+function drawSlots() {
+  const el = $('#slots'); if (!el) return; const P = S.plan;
+  const br = S.clips.filter(c => c.kind === 'broll' && !c.st);
+  if (!P.sections.length) { el.innerHTML = '<p class="sub">Chưa có kịch bản – web tự chọn cảnh. Muốn chèn đúng cảnh theo lời nói, hãy làm bước 1–2.</p>'; return; }
+  // tự gắn clip chưa dùng vào ô trống theo thứ tự
+  const used = new Set(Object.values(S.slots).map(Number)); let k = 0;
+  P.sections.forEach((s, i) => { if (S.slots[i] && !br.some(c => c.id == S.slots[i])) delete S.slots[i]; if (!S.slots[i]) { while (k < br.length && used.has(br[k].id)) k++; if (k < br.length) { S.slots[i] = br[k].id; used.add(br[k].id); k++; } } });
+  el.innerHTML = P.sections.map((s, i) => `<div class="slot ${S.slots[i] ? 'ok' : ''}"><span class="sn">${i + 1}</span><div style="flex:1;min-width:0"><div class="st2">${esc(s.part)} · ${esc(s.shot.title)}</div>
+    <select data-slot="${i}"><option value="">${br.length ? '— Web tự chọn —' : '— Chưa có clip cảnh quay —'}</option>${br.map(c => `<option value="${c.id}" ${S.slots[i] == c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select></div></div>`).join('')
+    + `<p class="sub" style="margin-top:6px">${P.sections.filter((s, i) => !S.slots[i]).length ? '⚠️ Còn cảnh chưa có clip – web sẽ dùng cảnh khác thay.' : '✅ Đủ cảnh.'}</p>`;
+  el.querySelectorAll('[data-slot]').forEach(s => s.onchange = () => { if (s.value) S.slots[s.dataset.slot] = +s.value; else delete S.slots[s.dataset.slot]; drawSlots(); if (S.variants.length) direct(false); });
+}
+
+/* ---------- Khung giao diện ---------- */
+function goStep(n) {
+  S.step = n; document.querySelectorAll('[data-step]').forEach(b => { b.classList.toggle('on', +b.dataset.step === n); b.classList.toggle('ok', +b.dataset.step < n); });
+  $('#vPlan').classList.toggle('hidden', n > 2); $('#vEdit').classList.toggle('hidden', n < 3);
+  if (n === 3) drawSlots();
+  window.scrollTo(0, 0);
+}
+function chips(id, map, val) { return `<div class="chips" id="${id}">${Object.entries(map).map(([k, v]) => `<span class="chip ${k == val ? 'on' : ''}" data-v="${k}">${esc(v)}</span>`).join('')}</div>`; }
 function app() {
+  S.gemKey = load('vs_gem');
+  const P = S.plan;
   $('#app').innerHTML = `
-  <div class="top"><h1>🎬 Dựng video TikTok</h1><span class="pill">v${VERSION}</span><span class="sp"></span>
-    <span class="me">${esc(S.me.name || '')}</span><button class="btn sm ghost" id="logout">Thoát</button></div>
+  <div class="top"><h1>🎬 Dựng video TikTok</h1><span class="pill">v${VERSION}</span>
+    <div class="steps">${['Ý tưởng', 'Kịch bản & cảnh quay', 'Gửi clip', 'Dựng & xuất'].map((n, i) => `<button class="st" data-step="${i + 1}">${i + 1}. ${n}</button>`).join('')}</div>
+    <span class="sp"></span><span class="me">${esc(S.me.name || '')}</span><button class="btn sm ghost" id="logout">Thoát</button></div>
   <div class="mob">Nên dùng máy tính + Chrome để dựng và xuất video mượt nhất.</div>
-  <div class="wrap">
+  <div class="wrap2" id="vPlan">
+    <div>
+      <div class="card"><h3>💡 Bạn muốn làm video gì?</h3>
+        <textarea class="inp" id="pIdea" placeholder="VD: Giới thiệu Reno chụp đêm đẹp, mời khách ghé shop dịp cuối tuần có quà">${esc(P.idea)}</textarea>
+        <div class="lbl">Mục tiêu</div>${chips('cGoal', GOALS, P.goal)}
+        <div class="lbl">Người xem</div>${chips('cAud', AUDS, P.aud)}
+        <div class="lbl">Độ dài</div>${chips('cLen', { 30: '30s', 45: '45s', 60: '60s' }, P.len)}
+        <div class="lbl">Giọng điệu</div>${chips('cTone', TONES, P.tone)}
+        <div class="lbl">Công thức</div>${chips('cForm', FORMULAS, P.formula)}
+        <div style="display:flex;gap:8px;align-items:center;margin-top:6px"><button class="btn pri" id="pGo">✨ Lên kịch bản</button>
+          <span class="pill ${S.gemKey ? 'g' : ''}" id="aiPill">${S.gemKey ? '🤖 AI Gemini' : '📐 Công thức'}</span></div>
+        <details style="margin-top:10px"><summary class="sub" style="cursor:pointer">🤖 Dùng AI Gemini (miễn phí) để kịch bản sáng tạo hơn</summary>
+          <p class="sub" style="margin-top:6px">Vào <b>aistudio.google.com</b> → đăng nhập Google → <b>Get API key</b> → <b>Create API key</b> → dán vào đây. Key chỉ lưu trên máy này. Không đưa thông tin sản phẩm chưa ra mắt / tài liệu nội bộ vào AI.</p>
+          <div class="row2"><input class="inp" id="gemKey" type="password" placeholder="Dán API key…" value="${esc(S.gemKey)}"><button class="btn" id="gemSave">Lưu key</button></div></details>
+      </div>
+      <div class="card"><h3>🎞️ Video mẫu để học hiệu ứng</h3>
+        <p class="sub">Dán link TikTok mẫu để lưu tham khảo. Để web <b>học nhịp cắt, màu, kiểu chuyển cảnh</b>, hãy tải video mẫu về máy (TikTok: Chia sẻ → Lưu video) rồi thả file vào đây.</p>
+        <div class="row2"><input class="inp" id="lkIn" placeholder="https://www.tiktok.com/@…/video/…"><button class="btn" id="lkAdd">+ Thêm link</button></div>
+        <div id="links"></div>
+        <label class="drop" style="margin-top:8px"><input type="file" id="smpIn" accept="video/*" hidden>⬆️ Thả file video mẫu vào đây</label>
+        <div id="smpSt" class="sub" style="margin-top:6px"></div>
+      </div>
+    </div>
+    <div>
+      <div class="card"><h3>🪝 Chọn câu hook (0–2s)</h3><div id="hooks"></div></div>
+      <div class="card"><h3 style="justify-content:space-between">📋 Kịch bản & danh sách cảnh quay <span style="display:flex;gap:6px"><button class="btn sm" id="tpBtn">📱 Đọc kịch bản</button><button class="btn sm" id="dlShots">⬇️ Tải danh sách cảnh</button><button class="btn sm" id="reGen">🎲 Viết lại</button></span></h3>
+        <div id="planOut"></div>
+        <div style="text-align:right;margin-top:10px"><button class="btn sm ghost" id="skipPlan">Bỏ qua, tự dựng từ clip có sẵn →</button> <button class="btn pri" id="toClips">Đã quay xong → Gửi clip</button></div></div>
+    </div>
+  </div>
+  <div class="wrap hidden" id="vEdit">
     <div class="left">
-      <div class="card"><h3><span class="n">1</span>Nguyên liệu</h3>
-        <p class="sub">Thả clip <b>người nói</b> (có giọng) và clip <b>cảnh quay điện thoại</b>. Web tự nhận loại – sai thì chọn lại.</p>
+      <div class="card"><h3><span class="n">3</span>Nguyên liệu</h3>
+        <p class="sub">Thả clip <b>người nói</b> (có giọng) và các clip <b>cảnh quay điện thoại</b>. Web tự nhận loại – sai thì chọn lại.</p>
         <label class="drop" id="drop"><input type="file" id="fIn" accept="video/*,audio/*" multiple hidden>⬆️ Chọn hoặc kéo thả clip vào đây</label>
         <div id="clips"></div>
-        <div class="row2" style="margin-top:10px">
-          <button class="btn" id="recBtn">🎙️ Thu giọng</button>
-          <label class="btn" style="justify-content:center">🎵 Nhạc nền<input type="file" id="mIn" accept="audio/*" hidden></label>
-        </div>
+        <div class="row2" style="margin-top:10px"><button class="btn" id="recBtn">🎙️ Thu giọng</button>
+          <label class="btn" style="justify-content:center">🎵 Tải nhạc riêng<input type="file" id="mIn" accept="audio/*" hidden></label></div>
+        <select class="inp" id="mSel" style="margin-top:8px"></select>
         <div id="musicInfo" class="sub" style="margin:6px 0 0"></div>
       </div>
-      <div class="card"><h3><span class="n">2</span>Lời nói & phụ đề</h3>
-        <p class="sub">AI nghe giọng trong clip để ra phụ đề (chạy ngay trên máy, lần đầu tải mô hình ~250MB). Hoặc dán kịch bản để khớp.</p>
+      <div class="card"><h3>🧩 Cảnh theo kịch bản</h3><div id="slots"></div></div>
+      <div class="card"><h3>🗣️ Lời nói & phụ đề</h3>
+        <p class="sub">AI nghe giọng để ra phụ đề (chạy ngay trên máy, lần đầu tải mô hình ~250MB). Đã có kịch bản thì bấm <b>Khớp kịch bản</b> cho nhanh.</p>
         <div class="row2"><button class="btn pri" id="asrBtn">🤖 Tạo phụ đề AI</button>
           <select class="inp" id="asrModel"><option value="Xenova/whisper-small">Chính xác (small)</option><option value="Xenova/whisper-base">Nhanh (base)</option></select></div>
         <div id="asrSt" class="sub" style="margin-top:6px"></div>
-        <details style="margin-top:6px"><summary class="sub" style="cursor:pointer">✍️ Dán kịch bản thay vì AI</summary>
-          <textarea class="inp" id="script" placeholder="Mỗi câu một dòng. Có người nói: web khớp câu vào giọng nói. Không có người nói: chữ chạy theo cảnh quay.">${esc(S.opt.script)}</textarea>
+        <details style="margin-top:6px" ${S.opt.script ? 'open' : ''}><summary class="sub" style="cursor:pointer">✍️ Kịch bản để khớp vào giọng</summary>
+          <textarea class="inp" id="script" placeholder="Mỗi câu một dòng.">${esc(S.opt.script)}</textarea>
           <button class="btn sm" id="alignBtn" style="margin-top:6px">Khớp kịch bản</button></details>
         <div id="sents" style="margin-top:8px"></div>
       </div>
-      <div class="card"><h3><span class="n">3</span>Chữ & thông điệp</h3>
-        <label class="f"><span>Tiêu đề hook (0–2s đầu) – để trống web tự chọn</span><input class="inp" id="oHook" value="${esc(S.opt.hook)}" placeholder="VD: CHỤP ĐÊM MÀ NHƯ BAN NGÀY?"></label>
-        <label class="f"><span>Kêu gọi hành động (CTA) cuối video</span><input class="inp" id="oCta" value="${esc(S.opt.cta)}"></label>
-        <div class="row2"><label class="f"><span>Nhãn thương hiệu</span><input class="inp" id="oBrand" value="${esc(S.opt.brand)}"></label>
-          <label class="f"><span>Kiểu phụ đề</span><select class="inp" id="oCap"><option value="auto">Theo phương án</option><option value="pop">Bật từng từ</option><option value="box">Hộp đen</option><option value="karaoke">Karaoke</option></select></label></div>
-        <div class="row2"><label class="f"><span>Dài tối đa (giây)</span><input class="inp" id="oLen" type="number" min="10" max="60" value="${S.opt.maxLen}"></label>
-          <label class="f"><span>Thanh tiến độ</span><select class="inp" id="oBar"><option value="1">Có</option><option value="0">Không</option></select></label></div>
+      <div class="card"><h3>✍️ Chữ & hiệu ứng</h3>
+        <label class="f"><span>Tiêu đề hook (0–2s đầu)</span><input class="inp" id="oHook" value="${esc(S.opt.hook)}" placeholder="để trống web tự chọn"></label>
+        <label class="f"><span>Kêu gọi hành động (CTA)</span><input class="inp" id="oCta" value="${esc(S.opt.cta)}"></label>
+        <div class="row2"><label class="f"><span>Nhãn thương hiệu (để trống = ẩn)</span><input class="inp" id="oBrand" value="${esc(S.opt.brand)}"></label>
+          <label class="f"><span>Kiểu phụ đề</span><select class="inp" id="oCap"><option value="auto">Theo phương án</option><option value="hl">Nền màu từng từ</option><option value="pop">Bật từng từ</option><option value="box">Hộp đen</option><option value="karaoke">Karaoke</option></select></label></div>
+        <div class="row2"><label class="f"><span>Mức hiệu ứng</span><select class="inp" id="oFx"><option value="full">Đầy đủ</option><option value="lite">Vừa phải</option></select></label>
+          <label class="f"><span>Dài tối đa (giây)</span><input class="inp" id="oLen" type="number" min="10" max="60" value="${S.opt.maxLen}"></label></div>
+        <label class="f"><span>Thanh tiến độ</span><select class="inp" id="oBar"><option value="1">Có</option><option value="0">Không</option></select></label>
       </div>
     </div>
     <div class="mid"><div class="stage">
       <div class="pv" id="pv"><canvas id="cv" width="${W}" height="${H}"></canvas>
-        <div class="empty" id="pvEmpty"><div style="font-size:42px">🎞️</div><div>Thêm clip rồi bấm <b>Đạo diễn</b> để web tự dựng 3 phương án.</div></div></div>
+        <div class="empty" id="pvEmpty"><div style="font-size:42px">🎞️</div><div>Thêm clip rồi bấm <b>Đạo diễn</b> để web tự dựng các phương án.</div></div></div>
       <div class="ctrl"><button class="btn" id="playBtn" disabled>▶</button><div class="tl" id="tl"></div><span class="tm" id="tm">0:00.0 / 0:00.0</span></div>
       <div class="ctrl" style="justify-content:center">
-        <button class="btn pri" id="dirBtn" disabled>🎬 Đạo diễn (3 phương án)</button>
-        <button class="btn" id="rerollBtn" disabled title="Giữ nguyên nguyên liệu, AI sáng tạo lại cách cắt">🎲 Sáng tạo lại</button>
+        <button class="btn pri" id="dirBtn" disabled>🎬 Đạo diễn</button>
+        <button class="btn" id="rerollBtn" disabled title="Giữ nguyên nguyên liệu, sáng tạo lại cách cắt">🎲 Sáng tạo lại</button>
         <button class="btn" id="expBtn" disabled>⬇️ Xuất video</button></div>
     </div></div>
     <div class="right">
       <div class="card"><h3>🎯 Phương án</h3><div id="vars"><p class="sub">Chưa có – thêm clip rồi bấm Đạo diễn.</p></div></div>
       <div class="card"><h3>📊 Tự chấm điểm viral</h3><div id="score"><p class="sub">Điểm sẽ hiện sau khi dựng.</p></div></div>
-      <div class="card"><details class="book"><summary>📘 Sổ tay TikTok mà đạo diễn đang dùng</summary><ol>${BOOK.map(b => `<li><b>${esc(b[0])}:</b> ${esc(b[1])}</li>`).join('')}</ol></details>
-        <p class="sub" style="margin-top:10px">Đợt sau: học từ video mẫu bạn gửi, AI (Gemini) xem thử như khán giả thật, chữ nằm sau người, sticker.</p></div>
+      <div class="card"><details class="book"><summary>📘 Sổ tay TikTok mà đạo diễn đang dùng</summary><ol>${BOOK.map(b => `<li><b>${esc(b[0])}:</b> ${esc(b[1])}</li>`).join('')}</ol></details></div>
     </div>
   </div>`;
   $('#logout').onclick = () => { store('vs_tok', null); location.reload(); };
+  document.querySelectorAll('[data-step]').forEach(b => b.onclick = () => goStep(+b.dataset.step));
+  // bước 1
+  const chipBind = (id, key, num) => document.querySelectorAll('#' + id + ' .chip').forEach(c => c.onclick = () => { P[key] = num ? +c.dataset.v : c.dataset.v; document.querySelectorAll('#' + id + ' .chip').forEach(x => x.classList.toggle('on', x === c)); });
+  chipBind('cGoal', 'goal'); chipBind('cAud', 'aud'); chipBind('cLen', 'len', true); chipBind('cTone', 'tone'); chipBind('cForm', 'formula');
+  $('#pIdea').oninput = e => P.idea = e.target.value;
+  $('#pGo').onclick = () => makeScript(); $('#reGen').onclick = () => makeScript(true);
+  $('#gemSave').onclick = () => { S.gemKey = $('#gemKey').value.trim(); store('vs_gem', S.gemKey || null); $('#aiPill').textContent = S.gemKey ? '🤖 AI Gemini' : '📐 Công thức'; $('#aiPill').className = 'pill ' + (S.gemKey ? 'g' : ''); toast(S.gemKey ? 'Đã lưu key trên máy này.' : 'Đã xoá key.'); };
+  const drawLinks = () => { $('#links').innerHTML = P.links.map((l, i) => `<div class="sub" style="margin:4px 0">🔗 <a href="${esc(l)}" target="_blank" rel="noopener" style="color:#7ec3ff">${esc(l.length > 60 ? l.slice(0, 60) + '…' : l)}</a> <a href="#" data-rm="${i}" style="color:var(--muted)">✕</a></div>`).join(''); document.querySelectorAll('[data-rm]').forEach(a => a.onclick = e => { e.preventDefault(); P.links.splice(+a.dataset.rm, 1); store('vs_links', JSON.stringify(P.links)); drawLinks(); }); };
+  try { P.links = JSON.parse(load('vs_links') || '[]'); } catch (e) { P.links = []; }
+  $('#lkAdd').onclick = () => { const v = $('#lkIn').value.trim(); if (!/^https?:\/\//.test(v)) return toast('Link chưa đúng.', true); P.links.push(v); store('vs_links', JSON.stringify(P.links)); $('#lkIn').value = ''; drawLinks(); };
+  drawLinks();
+  $('#smpIn').onchange = e => { const f = e.target.files[0]; if (f) analyzeSample(f); e.target.value = ''; };
+  $('#tpBtn').onclick = teleprompter; $('#dlShots').onclick = downloadShots;
+  $('#toClips').onclick = () => goStep(3); $('#skipPlan').onclick = () => goStep(3);
+  // bước 3–4
   const fIn = $('#fIn'); fIn.onchange = () => { addFiles([...fIn.files]); fIn.value = ''; };
   const dr = $('#drop'); dr.ondragover = e => { e.preventDefault(); dr.style.borderColor = 'var(--brand)'; }; dr.ondragleave = () => dr.style.borderColor = '';
   dr.ondrop = e => { e.preventDefault(); dr.style.borderColor = ''; addFiles([...e.dataTransfer.files]); };
   $('#mIn').onchange = e => setMusic(e.target.files[0]);
+  $('#mSel').onchange = e => { S.musicSel = e.target.value; if (S.variants.length) selectVariant(S.cur); };
   $('#recBtn').onclick = recordVoice;
   $('#asrModel').value = S.opt.model; $('#asrModel').onchange = e => S.opt.model = e.target.value;
   $('#asrBtn').onclick = runASR; $('#alignBtn').onclick = alignScript;
   $('#script').oninput = e => S.opt.script = e.target.value;
   const bind = (id, k, num) => { const el = $(id); el.onchange = () => { S.opt[k] = num ? Number(el.value) : el.value; if (S.variants.length) direct(false); }; };
-  bind('#oHook', 'hook'); bind('#oCta', 'cta'); bind('#oBrand', 'brand'); bind('#oCap', 'cap'); bind('#oLen', 'maxLen', true);
-  $('#oCap').value = S.opt.cap; $('#oBar').value = S.opt.bar ? '1' : '0'; $('#oBar').onchange = e => { S.opt.bar = e.target.value === '1'; Player.redraw(); };
-  $('#dirBtn').onclick = () => direct(false); $('#rerollBtn').onclick = () => direct(true);
+  bind('#oHook', 'hook'); bind('#oCta', 'cta'); bind('#oBrand', 'brand'); bind('#oCap', 'cap'); bind('#oLen', 'maxLen', true); bind('#oFx', 'fx');
+  $('#oCap').value = S.opt.cap; $('#oFx').value = S.opt.fx; $('#oBar').value = S.opt.bar ? '1' : '0'; $('#oBar').onchange = e => { S.opt.bar = e.target.value === '1'; Player.redraw(); };
+  $('#dirBtn').onclick = () => { goStep(4); direct(false); }; $('#rerollBtn').onclick = () => direct(true);
   $('#playBtn').onclick = () => Player.toggle(); $('#expBtn').onclick = exportVideo;
   $('#tl').onclick = e => { const r = e.currentTarget.getBoundingClientRect(); const p = Player.plan; if (p) Player.seek(clamp((e.clientX - r.left) / r.width, 0, 1) * p.dur); };
   Player.init($('#cv'));
-  drawClips(); drawSents();
+  drawClips(); drawSents(); drawPlan(); drawSample(); drawMusicSel(); loadLib();
+  goStep(S.step);
 }
 
 /* ---------- Nhập & phân tích clip ---------- */
@@ -236,7 +541,7 @@ async function addFiles(files) {
     const c = { id: nextId++, file: f, name: f.name, url: URL.createObjectURL(f), st: 'Đang phân tích…', prog: 0, kind: '', sents: [] };
     S.clips.push(c); drawClips();
     try { await analyzeClip(c); c.st = ''; } catch (e) { c.st = 'Lỗi: ' + e.message; c.bad = true; }
-    drawClips(); refreshButtons();
+    drawClips(); refreshButtons(); drawSlots();
   }
 }
 async function analyzeClip(c) {
@@ -302,8 +607,8 @@ function drawClips() {
       ${c.st && !c.bad ? `<div class="bar"><i style="width:${Math.round(c.prog * 100)}%"></i></div>` : ''}</div>
     ${c.kind ? `<select data-k="${c.id}">${Object.entries(KIND).filter(([k]) => c.hasVideo ? k !== 'vo' : k === 'vo' || k === 'skip').map(([k, n]) => `<option value="${k}" ${c.kind === k ? 'selected' : ''}>${n}</option>`).join('')}</select>` : ''}
     <button class="x" data-del="${c.id}" title="Xoá">✕</button></div>`).join('');
-  el.querySelectorAll('select[data-k]').forEach(s => s.onchange = () => { S.clips.find(c => c.id == s.dataset.k).kind = s.value; drawSents(); refreshButtons(); });
-  el.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { S.clips = S.clips.filter(c => c.id != b.dataset.del); drawClips(); drawSents(); refreshButtons(); });
+  el.querySelectorAll('select[data-k]').forEach(s => s.onchange = () => { S.clips.find(c => c.id == s.dataset.k).kind = s.value; drawSents(); refreshButtons(); drawSlots(); });
+  el.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { S.clips = S.clips.filter(c => c.id != b.dataset.del); drawClips(); drawSents(); refreshButtons(); drawSlots(); });
 }
 function drawClipProg(c) { const i = document.querySelector(`.clip[data-id="${c.id}"] .bar i`); if (i) i.style.width = Math.round(c.prog * 100) + '%'; }
 function refreshButtons() {
@@ -400,8 +705,10 @@ function fromChunks(chunks, c) {
   return out;
 }
 function mkSent(c, t0, t1, text) { return { id: c.id + '_' + Math.round(t0 * 100), t0, t1, text: cleanText(text), words: splitWords(text, t0, t1), hook: false, off: false }; }
-function alignScript() {
-  const lines = S.opt.script.split(/\n+|(?<=[.!?…])\s+/).map(cleanText).filter(Boolean);
+function alignScript(quiet) {
+  const secs = S.plan.sections, fromPlan = secs.length && cleanText(S.opt.script) === cleanText(secs.map(x => x.say).join('\n'));
+  const tagged = fromPlan ? secs.flatMap((x, k) => x.say.split(/(?<=[.!?…])\s+/).map(cleanText).filter(Boolean).map(l => ({ l, k }))) : S.opt.script.split(/\n+|(?<=[.!?…])\s+/).map(cleanText).filter(Boolean).map(l => ({ l, k: null }));
+  const lines = tagged.map(x => x.l);
   if (!lines.length) return toast('Chưa có kịch bản.', true);
   const talks = S.clips.filter(c => (c.kind === 'talk' || c.kind === 'vo') && c.voiced && c.voiced.length);
   if (!talks.length) { toast('Không có giọng nói – kịch bản sẽ chạy thành chữ theo cảnh quay.'); if (S.variants.length || S.clips.length) direct(false); return; }
@@ -411,8 +718,8 @@ function alignScript() {
   const at = x => { let r = x; for (const s of segs) { const d = s.t1 - s.t0; if (r <= d + 1e-6) return { c: s.c, t: s.t0 + r }; r -= d; } const s = segs[segs.length - 1]; return { c: s.c, t: s.t1 }; };
   talks.forEach(c => c.sents = []);
   let acc = 0;
-  lines.forEach(l => { const a = at(T * acc / L + 0.001); acc += l.length; const b = at(T * acc / L - 0.001); const c = a.c; const t1 = b.c === c ? b.t : c.voiced[c.voiced.length - 1].t1; c.sents.push(mkSent(c, a.t, Math.max(a.t + 0.4, t1), l)); });
-  drawClips(); drawSents(); toast('Đã khớp ' + lines.length + ' câu vào giọng nói.');
+  tagged.forEach(({ l, k }) => { const a = at(T * acc / L + 0.001); acc += l.length; const b = at(T * acc / L - 0.001); const c = a.c; const t1 = b.c === c ? b.t : c.voiced[c.voiced.length - 1].t1; const se = mkSent(c, a.t, Math.max(a.t + 0.4, t1), l); if (k != null) se.sec = k; c.sents.push(se); });
+  drawClips(); drawSents(); if (quiet) return; toast('Đã khớp ' + lines.length + ' câu vào giọng nói.');
   if (S.variants.length) direct(false);
 }
 function drawSents() {
@@ -442,7 +749,7 @@ function phrasesOf(c) {   // khi chưa có phụ đề: gom các đoạn có gi�
   return out.map(p => ({ id: c.id + '_p' + Math.round(p.t0 * 100), t0: p.t0, t1: p.t1, text: '', words: [], hook: false, off: false }));
 }
 function energyOf(c, a, b) { if (!c.env) return 0; let s = 0, n = 0; for (let i = Math.floor(a / 0.05); i < Math.min(c.env.length, Math.ceil(b / 0.05)); i++) { s += c.env[i]; n++; } const m = n ? s / n : 0; return clamp(m * c.gain * 8 - 0.8, -0.5, 1); }
-function pickBroll(brolls, L, used, R, prefer) {
+function pickBroll(brolls, L, used, R, prefer, preferClip) {
   let best = null;
   brolls.forEach((c, ci) => {
     const fr = c.frames || [{ t: 0, lum: 0.5, mot: 0.02 }], maxS = Math.max(0, c.dur - L - 0.05);
@@ -453,6 +760,7 @@ function pickBroll(brolls, L, used, R, prefer) {
       (used[c.id] || []).forEach(([a, b]) => { const ov = Math.max(0, Math.min(b, e) - Math.max(a, s)); sc -= ov / L * 1.4; });
       sc -= (used['n' + c.id] || 0) * 0.15;
       if (prefer === 'best') sc += mot * 3;
+      if (preferClip && c.id === preferClip) sc += 2.5;
       if (!best || sc > best.sc) best = { c, s, sc };
     }
   });
@@ -462,11 +770,14 @@ function pickBroll(brolls, L, used, R, prefer) {
 function snapToWord(t, words, lim) { let b = t, d = lim; words.forEach(w => { const x = Math.abs(w.t1 - t); if (x < d) { d = x; b = w.t1 + 0.02; } }); return b; }
 
 function buildPlan(key, seed) {
-  const st = STYLES[key], R = rng(seed * 7919 + key.charCodeAt(0) * 131);
+  const R = rng(seed * 7919 + key.charCodeAt(0) * 131);
+  const st = Object.assign({ emoji: true }, key === 'D' ? sampleStyle() : STYLES[key]);
+  if (S.opt.fx === 'lite') { st.pip *= 0.5; st.split *= 0.4; st.shake = false; st.trans = st.trans.map(t => t === 'glitch' ? 'flash' : t); st.every += 2; }
+  const secs = S.plan.sections || [];
   const talks = S.clips.filter(c => (c.kind === 'talk' || c.kind === 'vo') && c.audio && !c.st);
   const brolls = S.clips.filter(c => c.kind === 'broll' && c.hasVideo && !c.st);
   const maxLen = clamp(Number(S.opt.maxLen) || 58, 10, 60);
-  const plan = { key, style: st, seed, shots: [], audio: [], words: [], caps: [], callouts: [], trans: [], sfx: [], hook: null, cta: null, dur: 0, voiced: [], notes: [] };
+  const plan = { key, style: st, seed, shots: [], audio: [], words: [], caps: [], callouts: [], trans: [], sfx: [], badges: [], emojis: [], rings: [], hook: null, cta: null, dur: 0, voiced: [], notes: [], units: [] };
   const used = {};
   // 1) Các đơn vị lời nói
   let units = [];
@@ -475,6 +786,11 @@ function buildPlan(key, seed) {
     ss.forEach(s => units.push({ c, s0: Math.max(0, s.t0 - 0.07), s1: Math.min(c.dur, s.t1 + 0.12), sent: s, score: hookScore(s.text, energyOf(c, s.t0, s.t1)) + (s.hook ? 50 : 0) }));
   });
   for (let i = 1; i < units.length; i++) { const p = units[i - 1], u = units[i]; if (p.c === u.c && u.s0 < p.s1) { const m = (p.sent.t1 + u.sent.t0) / 2; p.s1 = Math.max(p.sent.t1, m); u.s0 = Math.min(u.sent.t0, p.s1); } }
+  // gắn mỗi câu vào phần kịch bản (HOOK / Ý 1 / CTA…) theo vị trí tương đối
+  if (secs.length && units.length) {
+    const sc = secs.map(x => x.say.length), stot = sc.reduce((a, b) => a + b, 0) || 1, ut = units.map(u => Math.max(1, (u.sent.text || '').length || (u.s1 - u.s0) * 14)), utot = ut.reduce((a, b) => a + b, 0);
+    let acc = 0; units.forEach((u, i) => { if (u.sent.sec != null) { u.sec = u.sent.sec; acc += ut[i]; return; } const mid = (acc + ut[i] / 2) / utot * stot; acc += ut[i]; let c2 = 0, k = 0; while (k < secs.length - 1 && c2 + sc[k] < mid) { c2 += sc[k]; k++; } u.sec = k; });
+  }
   const montage = !units.length;
   if (!montage) {
     // 2) Chọn câu mở đầu
@@ -541,7 +857,9 @@ function buildPlan(key, seed) {
     const merged = []; raw.forEach(s => { const p = merged[merged.length - 1]; if (p && p.kind === s.kind && (s.kind === 'broll' || s.kind === 'blank') && p.t1 - p.t0 < 2.6) p.t1 = s.t1; else merged.push({ ...s }); });
     let zi = 0, prevTalkEnd = null;
     merged.forEach(s => {
-      if (s.kind === 'broll') { const L = s.t1 - s.t0, p = pickBroll(brolls, L, used, R, s.intro ? 'best' : ''); s.c = p.c; s.src0 = p.s; const up = R() > 0.5; s.z0 = up ? 1.03 : 1.13; s.z1 = up ? 1.13 : 1.03; s.px = (R() - 0.5) * 0.08; s.py = (R() - 0.5) * 0.05; }
+      if (s.kind === 'broll') { const L = s.t1 - s.t0, mu = units.find(u => (s.t0 + s.t1) / 2 >= u.t0 && (s.t0 + s.t1) / 2 < u.t1); s.sec = mu ? mu.sec : (s.tail ? secs.length - 1 : 0);
+        const p = pickBroll(brolls, L, used, R, s.intro ? 'best' : '', s.sec != null ? S.slots[s.sec] : null); s.c = p.c; s.src0 = p.s;
+        if (mu && mu.c.hasVideo && !s.intro && !s.tail && L >= 1.4) { const r = R(); s.layout = r < st.split ? 'split' : r < st.split + st.pip ? 'pip' : 'full'; } const up = R() > 0.5; s.z0 = up ? 1.03 : 1.13; s.z1 = up ? 1.13 : 1.03; s.px = (R() - 0.5) * 0.08; s.py = (R() - 0.5) * 0.05; }
       else if (s.kind === 'talkTail') { const lu = units[units.length - 1]; s.kind = 'talk'; s.c = lu.c.hasVideo ? lu.c : null; s.src0 = Math.min(lu.s1, lu.c.dur - 0.1); s.freeze = true; s.z0 = 1.12; s.z1 = 1.18; }
       else if (s.kind === 'talk') {
         const cont = prevTalkEnd && prevTalkEnd.c === s.c && Math.abs(prevTalkEnd.src - s.src0) < 0.05 && prevTalkEnd.t === s.t0;
@@ -591,8 +909,8 @@ function buildPlan(key, seed) {
     if ((isNum || isKey) && w.t0 - lastCo >= st.every && w.t0 > 2.2 && w.t0 < plan.dur - 4) {
       let txt = w.w.replace(/[.,!?…:;"“”]/g, ''); const nx = plan.words[i + 1];
       if (nx && (isNum || isKey) && nx.t0 - w.t1 < 0.3 && (txt + ' ' + nx.w).length <= 16) txt += ' ' + nx.w.replace(/[.,!?…:;]/g, '');
-      plan.callouts.push({ t0: w.t0, t1: w.t0 + 1.4, text: txt.toUpperCase(), rot: (R() - 0.5) * 8 }); lastCo = w.t0;
-      plan.sfx.push({ t: w.t0, type: 'pop' });
+      plan.callouts.push({ t0: w.t0, t1: w.t0 + 1.4, text: txt.toUpperCase(), rot: (R() - 0.5) * 8, num: isNum }); lastCo = w.t0;
+      plan.sfx.push({ t: w.t0, type: isNum ? 'ting' : 'pop' });
     }
   });
   // 8) Hook + CTA
@@ -601,14 +919,30 @@ function buildPlan(key, seed) {
   const hookTxt = cleanText(S.opt.hook) || fw.join(' ').replace(/[,.]$/, '').replace(/ …$/, '…');
   if (hookTxt) plan.hook = { t0: 0, t1: Math.min(st.teaser ? 3.0 : 2.6, plan.dur), text: hookTxt.toUpperCase() };
   if (cleanText(S.opt.cta)) { plan.cta = { t0: Math.max(0, plan.dur - 3.4), t1: plan.dur, text: cleanText(S.opt.cta) }; plan.sfx.push({ t: plan.cta.t0, type: 'ding' }); }
-  // 9) Chuyển cảnh + hiệu ứng âm thanh
+  // 9) Số thứ tự ý chính (badge), emoji theo từ khoá, khoanh tròn, pháo giấy
+  const us = plan.units = (plan.words.map(w => w.u).filter((u, i, a) => u && a.indexOf(u) === i));
+  let nB = 0;
+  if (secs.length) secs.forEach((x, k) => { if (!/^Ý\s*\d/i.test(x.part)) return; const su = us.filter(u => u.sec === k); if (!su.length) return; nB++; const t0 = su[0].t0; plan.badges.push({ t0, t1: Math.min(t0 + 3.4, su[su.length - 1].t1), n: nB, label: (x.label || '').toUpperCase().slice(0, 16) }); });
+  else plan.caps.forEach(c => { if (POINT_RE.test(c.text) && nB < 5) { nB++; plan.badges.push({ t0: c.t0, t1: c.t0 + 3, n: nB, label: '' }); } });
+  plan.badges.forEach(b => plan.sfx.push({ t: b.t0, type: 'pop' }));
+  if (st.emoji) { let lastE = -9, side = 0;
+    plan.words.forEach(w => { const e = emojiOf(w.w); if (!e || w.t0 - lastE < (S.opt.fx === 'lite' ? 4.5 : 2.6) || w.t0 < (plan.hook ? plan.hook.t1 : 2) - 0.3 || plan.callouts.some(c => Math.abs(c.t0 - w.t0) < 0.8)) return;
+      plan.emojis.push({ t0: w.t0, t1: w.t0 + 1.5, e, side: side++ % 2, rot: (R() - 0.5) * 0.5 }); lastE = w.t0;
+      plan.sfx.push({ t: w.t0, type: e === '📸' ? 'shutter' : e === '🎁' || e === '💸' ? 'ting' : 'blip' }); });
+    if (plan.hook) { const he = emojiOf(plan.hook.text) || '😱'; plan.emojis.push({ t0: 0.35, t1: plan.hook.t1, e: he, side: 2, rot: 0.2, hook: true }); } }
+  plan.callouts.forEach(c => { const sh = plan.shots.find(x => c.t0 >= x.t0 && c.t0 < x.t1); if (sh && sh.kind === 'broll' && (!sh.layout || sh.layout === 'full' || sh.layout === 'pip')) plan.rings.push({ t0: c.t0 + 0.1, t1: Math.min(sh.t1, c.t0 + 1.6), rot: (R() - 0.5) * 0.4 }); });
+  plan.confetti = !!(st.confetti || key === 'B');
+  if (plan.cta && plan.confetti) plan.sfx.push({ t: plan.cta.t0 + 0.05, type: 'confetti' });
+  // 10) Chuyển cảnh + hiệu ứng âm thanh
   plan.sfx.push({ t: 0, type: 'hit' });
   for (let i = 1; i < plan.shots.length; i++) {
     const a = plan.shots[i - 1], b = plan.shots[i], tt = b.t0;
-    const type = a.kind !== b.kind ? st.trans : (b.kind === 'talk' ? 'punch' : (key === 'B' ? 'flash' : st.trans === 'zoom' ? 'zoom' : 'cut'));
-    plan.trans.push({ t: tt, type });
-    if (type === 'flash' || type === 'zoom') plan.sfx.push({ t: tt - 0.12, type: 'whoosh' });
-    else if (type === 'cut' && a.kind !== b.kind && R() > 0.4) plan.sfx.push({ t: tt - 0.1, type: 'swish' });
+    const lay = x => x.kind + (x.layout || '');
+    let type = lay(a) !== lay(b) || b.kind === 'broll' ? st.trans[Math.floor(R() * st.trans.length)] : (b.kind === 'talk' ? 'punch' : 'cut');
+    if (a.kind === 'talk' && b.kind === 'talk') type = 'punch';
+    plan.trans.push({ t: tt, type, seed: R() });
+    const sx = { glitch: 'glitch', whip: 'swish', flash: 'whoosh', zoom: 'whoosh', leak: 'swish' }[type];
+    if (sx) plan.sfx.push({ t: tt - (type === 'glitch' ? 0.02 : 0.12), type: sx });
   }
   plan.grade = st.grade; plan.bpm = st.bpm; plan.montage = montage;
   plan.score = evaluate(plan);
@@ -623,7 +957,7 @@ function evaluate(p) {
   const instant = (p.hook ? 0.5 : 0) + (firstCap && firstCap.t0 < 0.9 ? 0.3 : (p.montage || (p.style.teaser && p.hook)) ? 0.3 : 0) + (hookWordsScore >= 2 ? 0.2 : hookWordsScore >= 1 ? 0.1 : 0);
   add('Hook trong 2 giây đầu', instant, 18, 'Câu đầu chưa đủ "câu khách". Đặt tiêu đề hook dạng câu hỏi / con số / lợi ích, hoặc ⭐ chọn câu mạnh nhất làm câu mở đầu.', 'Có tiêu đề + lời nói ngay khung đầu');
   const d = p.dur; add('Thời lượng ' + d.toFixed(0) + 's', d >= 20 && d <= 60 ? (d <= 50 ? 1 : 0.8) : d < 20 ? 0.5 : 0, 8, d > 60 ? 'Quá 60s – giảm số câu.' : d < 20 ? 'Hơi ngắn – thêm 1 ý chính.' : '25–45s là đẹp nhất để người xem xem hết.', '');
-  const ev = new Set([0, p.dur]); p.shots.forEach(s => ev.add(s.t0)); p.callouts.forEach(c => ev.add(c.t0)); if (p.cta) ev.add(p.cta.t0);
+  const ev = new Set([0, p.dur]); p.shots.forEach(s => ev.add(s.t0)); p.callouts.forEach(c => ev.add(c.t0)); (p.badges || []).forEach(c => ev.add(c.t0)); (p.emojis || []).forEach(c => ev.add(c.t0)); if (p.cta) ev.add(p.cta.t0);
   const evs = [...ev].sort((a, b) => a - b); let mg = 0; for (let i = 1; i < evs.length; i++) mg = Math.max(mg, evs[i] - evs[i - 1]);
   add('Nhịp thay đổi (dài nhất ' + mg.toFixed(1) + 's không đổi)', mg <= 4 ? 1 : mg <= 5.5 ? 0.5 : 0, 14, 'Có đoạn quá lâu không có thay đổi – thêm cảnh quay điện thoại hoặc bấm 🎲 Sáng tạo lại.', 'Cứ ≤4s có thay đổi');
   const vt = p.voiced.reduce((a, v) => a + v[1] - v[0], 0);
@@ -636,7 +970,7 @@ function evaluate(p) {
   add('Tỉ lệ cảnh điện thoại ' + Math.round(br * 100) + '%', p.montage ? 1 : br >= 0.2 && br <= 0.6 ? 1 : br > 0 ? 0.5 : 0, 10, br === 0 ? 'Chưa có cảnh quay điện thoại – thêm clip B-roll để minh hoạ.' : br < 0.2 ? 'Hơi ít cảnh minh hoạ.' : 'Hơi nhiều cảnh minh hoạ, ít mặt người.', '');
   add('Có CTA ở cuối', p.cta ? 1 : 0, 10, 'Thêm câu kêu gọi hành động ở mục 3.', 'CTA hiện ở ' + (p.cta ? (p.dur - p.cta.t0).toFixed(1) : 0) + 's cuối');
   const pts = p.caps.filter(c => POINT_RE.test(c.text)).length;
-  add('3 ý chính rõ ràng', pts >= 2 || p.callouts.length >= 3 ? 1 : p.callouts.length >= 2 ? 0.6 : 0.3, 8, 'Nên nói rõ "thứ nhất / thứ hai / cuối cùng" hoặc nhắc con số, tính năng để web làm chữ nổi.', p.callouts.length + ' chữ nổi nhấn ý');
+  add('3 ý chính rõ ràng', pts >= 2 || p.badges.length >= 2 || p.callouts.length >= 3 ? 1 : p.callouts.length >= 2 ? 0.6 : 0.3, 8, 'Nên nói rõ "thứ nhất / thứ hai / cuối cùng" hoặc nhắc con số, tính năng để web làm chữ nổi.', (p.badges.length ? p.badges.length + ' ý có số thứ tự, ' : '') + p.callouts.length + ' chữ nổi nhấn ý');
   const lums = p.shots.filter(s => s.c && s.c.lum != null).map(s => s.c.lum); const lum = lums.length ? lums.reduce((a, b) => a + b, 0) / lums.length : 0.4;
   add('Ánh sáng', lum >= 0.3 ? 1 : lum >= 0.2 ? 0.6 : 0.2, 6, 'Clip hơi tối – quay nơi đủ sáng, quay ngược sáng sẽ làm tối mặt.', '');
   add('Âm thanh', (p.audio.length || S.music) ? 1 : 0.4, 6, 'Chưa có giọng nói – thêm giọng thu hoặc nhạc.', 'Giọng rõ, nhạc tự hạ khi nói');
@@ -657,8 +991,10 @@ function evaluate(p) {
 async function direct(reroll) {
   if (reroll) S.seed = Math.floor(Math.random() * 1e6) + 2;
   const ok = S.clips.some(c => c.kind && c.kind !== 'skip' && !c.st); if (!ok) return;
+  const tk = S.clips.filter(c => (c.kind === 'talk' || c.kind === 'vo') && c.voiced && c.voiced.length);
+  if (S.opt.script && tk.length && tk.every(c => !c.sents.length)) { alignScript(true); toast('Đã tự khớp kịch bản vào giọng nói. Muốn chính xác hơn: bấm 🤖 Tạo phụ đề AI.'); }
   try {
-    S.variants = ['A', 'B', 'C'].map(k => buildPlan(k, S.seed));
+    S.variants = ['A', 'B', 'C'].concat(S.sample ? ['D'] : []).map(k => buildPlan(k, S.seed));
     // phương án tốt nhất lên trước
     const best = S.variants.reduce((b, v, i) => v.score.score > S.variants[b].score.score ? i : b, 0);
     if (!reroll && S.cur >= S.variants.length) S.cur = best; if (reroll || !Player.plan) S.cur = best;
@@ -700,24 +1036,22 @@ function drawTimeline(p) {
   Player.tick();
 }
 
-/* ===================== ÂM THANH: giọng + nhạc tự tạo + hiệu ứng ===================== */
+/* ===================== ÂM THANH: giọng + nhạc + hiệu ứng ===================== */
 function noiseBuf(oc, sec) { const b = oc.createBuffer(1, Math.ceil(oc.sampleRate * sec), oc.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; return b; }
+function tone(oc, out, type, f0, f1, t, L, vol) { const o = oc.createOscillator(), g = oc.createGain(); o.type = type; o.frequency.setValueAtTime(f0, t); if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, t + L); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + L); o.connect(g); g.connect(out); o.start(t); o.stop(t + L + 0.02); }
+function noiseHit(oc, out, t, L, ftype, f0, f1, vol, q) { const n = oc.createBufferSource(); n.buffer = noiseBuf(oc, L + 0.05); const f = oc.createBiquadFilter(); f.type = ftype; f.Q.value = q || 1; f.frequency.setValueAtTime(f0, t); if (f1 !== f0) f.frequency.exponentialRampToValueAtTime(f1, t + L); const g = oc.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + Math.min(0.03, L * 0.3)); g.gain.exponentialRampToValueAtTime(0.0001, t + L); n.connect(f); f.connect(g); g.connect(out); n.start(t); n.stop(t + L + 0.05); }
 function sfx(oc, out, type, t) {
-  if (t < 0) t = 0; const g = oc.createGain(); g.connect(out);
-  if (type === 'whoosh' || type === 'swish') {
-    const n = oc.createBufferSource(); n.buffer = noiseBuf(oc, 0.5); const f = oc.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 1.2;
-    const L = type === 'whoosh' ? 0.4 : 0.25; f.frequency.setValueAtTime(300, t); f.frequency.exponentialRampToValueAtTime(type === 'whoosh' ? 5000 : 3000, t + L);
-    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(type === 'whoosh' ? 0.35 : 0.18, t + L * 0.7); g.gain.linearRampToValueAtTime(0, t + L);
-    n.connect(f); f.connect(g); n.start(t); n.stop(t + L + 0.05);
-  } else if (type === 'pop') {
-    const o = oc.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(700, t); o.frequency.exponentialRampToValueAtTime(1500, t + 0.07);
-    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.28, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12); o.connect(g); o.start(t); o.stop(t + 0.14);
-  } else if (type === 'hit') {
-    const o = oc.createOscillator(); o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(40, t + 0.35);
-    g.gain.setValueAtTime(0.6, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.45); o.connect(g); o.start(t); o.stop(t + 0.5);
-  } else if (type === 'ding') {
-    [1318.5, 1760].forEach((fq, i) => { const o = oc.createOscillator(); o.type = 'sine'; o.frequency.value = fq; const gg = oc.createGain(); gg.gain.setValueAtTime(0.0001, t + i * 0.09); gg.gain.exponentialRampToValueAtTime(0.18, t + i * 0.09 + 0.01); gg.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.09 + 0.8); o.connect(gg); gg.connect(g); o.start(t + i * 0.09); o.stop(t + i * 0.09 + 0.85); });
-  }
+  if (t < 0) t = 0;
+  if (type === 'whoosh') noiseHit(oc, out, t, 0.42, 'bandpass', 300, 5000, 0.35, 1.2);
+  else if (type === 'swish') noiseHit(oc, out, t, 0.24, 'bandpass', 600, 3500, 0.2, 1.5);
+  else if (type === 'pop') tone(oc, out, 'sine', 700, 1500, t, 0.12, 0.28);
+  else if (type === 'blip') tone(oc, out, 'triangle', 900, 1300, t, 0.09, 0.16);
+  else if (type === 'hit') { tone(oc, out, 'sine', 140, 40, t, 0.45, 0.6); noiseHit(oc, out, t, 0.25, 'lowpass', 2000, 300, 0.2); }
+  else if (type === 'ting') { tone(oc, out, 'sine', 2637, 2637, t, 0.5, 0.14); tone(oc, out, 'sine', 3951, 3951, t + 0.06, 0.45, 0.09); }
+  else if (type === 'ding') [1318.5, 1760].forEach((f, i) => tone(oc, out, 'sine', f, f, t + i * 0.09, 0.8, 0.18));
+  else if (type === 'shutter') { noiseHit(oc, out, t, 0.04, 'highpass', 3000, 3000, 0.5); noiseHit(oc, out, t + 0.07, 0.05, 'bandpass', 2500, 1800, 0.35, 2); }
+  else if (type === 'glitch') { for (let i = 0; i < 5; i++) tone(oc, out, 'square', 200 + Math.random() * 1400, 100 + Math.random() * 900, t + i * 0.035, 0.03, 0.07); noiseHit(oc, out, t, 0.15, 'bandpass', 1200, 4000, 0.12, 3); }
+  else if (type === 'confetti') { for (let i = 0; i < 6; i++) noiseHit(oc, out, t + i * 0.05 + Math.random() * 0.03, 0.06, 'highpass', 2500, 2500, 0.18); tone(oc, out, 'sine', 523, 1046, t, 0.3, 0.1); }
 }
 function beat(oc, out, bpm, dur, key) {
   const b = 60 / bpm, roots = key === 'C' ? [110, 87.31, 130.81, 98] : [110, 130.81, 98, 87.31];
@@ -745,32 +1079,48 @@ async function renderMix(p) {
     s.connect(g); g.connect(voice); s.start(a.t0, a.src0, L); });
   const mus = oc.createGain(), hasVoice = p.voiced.length > 0, hi = hasVoice ? 0.32 : 0.6, lo = 0.09;
   mus.gain.setValueAtTime(hasVoice ? lo : hi, 0);
-  if (hasVoice) { // tự hạ nhạc khi có giọng
+  if (hasVoice) {
     const vs = []; p.voiced.forEach(v => { const l = vs[vs.length - 1]; if (l && v[0] - l[1] < 0.6) l[1] = v[1]; else vs.push([...v]); });
     let lastUp = 0; vs.forEach(v => { if (v[0] - lastUp > 0.8) { mus.gain.setTargetAtTime(hi, lastUp + 0.1, 0.12); mus.gain.setTargetAtTime(lo, v[0] - 0.15, 0.05); } lastUp = v[1]; });
     mus.gain.setTargetAtTime(hi, lastUp + 0.1, 0.15);
   }
   mus.gain.setTargetAtTime(0.0001, p.dur - 0.7, 0.2);
   mus.connect(master);
-  if (S.music) { const s = oc.createBufferSource(); s.buffer = S.music.buf; s.loop = true; const g = oc.createGain(); g.gain.value = 0.8; s.connect(g); g.connect(mus); s.start(0); }
-  else beat(oc, mus, p.bpm, p.dur + 0.2, p.key);
+  const m = musicFor(p); p.musicName = '';
+  if (m && m.none) p.musicName = 'Không nhạc';
+  else {
+    let buf = m && m.buf; if (m && m.track) { try { buf = await trackBuf(m.track); p.musicName = m.track.name || m.track.file; } catch (e) { buf = null; } } else if (m) p.musicName = m.name;
+    if (buf) { const s = oc.createBufferSource(); s.buffer = buf; s.loop = true; const g = oc.createGain(); g.gain.value = 0.75; s.connect(g); g.connect(mus); s.start(0, m.track && m.track.start || 0); }
+    else { beat(oc, mus, p.bpm, p.dur + 0.2, p.key === 'D' ? (p.bpm > 115 ? 'B' : p.bpm < 95 ? 'C' : 'A') : p.key); p.musicName = 'Nhạc tự tạo ' + p.bpm + ' BPM'; }
+  }
   const fx = oc.createGain(); fx.gain.value = 0.9; fx.connect(master);
   p.sfx.forEach(e => sfx(oc, fx, e.type, e.t));
   return oc.startRendering();
 }
 
-/* ===================== KHUNG HÌNH: vẽ video lên canvas ===================== */
+/* ===================== KHUNG HÌNH ===================== */
 const FONT = '"Be Vietnam Pro", system-ui, sans-serif';
+const EFONT = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
 function wrap(g, text, maxW) { const ws = text.split(' '), lines = []; let cur = ''; ws.forEach(w => { const t = cur ? cur + ' ' + w : w; if (g.measureText(t).width > maxW && cur) { lines.push(cur); cur = w; } else cur = t; }); if (cur) lines.push(cur); return lines; }
 function rrect(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
 const easeBack = x => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+const easeOut = x => 1 - Math.pow(1 - clamp(x, 0, 1), 3);
+function cover(g, v, x, y, w, h, z, ax, ay, px, py) {   // vẽ video phủ kín ô (x,y,w,h)
+  const vw = v.videoWidth, vh = v.videoHeight; if (!vw) return;
+  const sc = Math.max(w / vw, h / vh) * z, dw = vw * sc, dh = vh * sc;
+  let dx = x + (w - dw) / 2 + (px || 0) * w, dy = y + h * ay - dh * ay + (py || 0) * h;
+  dx = clamp(dx, x + w - dw, x); dy = clamp(dy, y + h - dh, y);
+  g.drawImage(v, dx, dy, dw, dh);
+}
+let GRAIN = null;
+function grainTile() { if (GRAIN) return GRAIN; GRAIN = document.createElement('canvas'); GRAIN.width = GRAIN.height = 256; const g = GRAIN.getContext('2d'), d = g.createImageData(256, 256); for (let i = 0; i < d.data.length; i += 4) { const v = Math.random() * 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; } g.putImageData(d, 0, 0); return GRAIN; }
 
 const Player = {
-  cv: null, g: null, plan: null, mix: null, pool: {}, playing: false, t: 0, src: null, t0c: 0, t0: 0, extraDest: null, onEnd: null, last: null,
+  cv: null, g: null, plan: null, mix: null, pool: {}, playing: false, t: 0, src: null, t0c: 0, t0: 0, extraDest: null, onEnd: null,
   init(cv) { this.cv = cv; this.g = cv.getContext('2d'); this.base = document.createElement('canvas'); this.base.width = W; this.base.height = H; this.bg = this.base.getContext('2d'); this.bg.fillStyle = '#000'; this.bg.fillRect(0, 0, W, H); this.g.drawImage(this.base, 0, 0); },
   el(c, slot) {
     const k = c.id + ':' + slot;
-    if (!this.pool[k]) { const v = document.createElement('video'); v.muted = true; v.playsInline = true; v.preload = 'auto'; v.src = c.url; v.crossOrigin = 'anonymous'; this.pool[k] = v; }
+    if (!this.pool[k]) { const v = document.createElement('video'); v.muted = true; v.playsInline = true; v.preload = 'auto'; v.src = c.url; this.pool[k] = v; }
     return this.pool[k];
   },
   async load(p) {
@@ -780,14 +1130,19 @@ const Player = {
     await this.seek(0);
     $('#playBtn').disabled = true; $('#tm').textContent = 'Đang trộn âm thanh…';
     this.mix = await renderMix(p); if (this.plan !== p) return;
+    const mi = $('#musicInfo'); if (mi) mi.textContent = '🎵 Đang dùng: ' + (p.musicName || '');
     $('#playBtn').disabled = false; this.tick();
   },
   shotAt(t) { const sh = this.plan.shots; for (let i = 0; i < sh.length; i++) if (t < sh[i].t1 || i === sh.length - 1) return i; return 0; },
   srcT(s, t) { return s.freeze ? s.src0 : clamp(s.src0 + (t - s.t0), 0, s.c.dur - 0.04); },
+  talkAt(t) { const a = this.plan.audio.find(x => t >= x.t0 && t < x.t1); return a && a.c.hasVideo ? { c: a.c, src: clamp(a.src0 + t - a.t0, 0, a.c.dur - 0.04), v: this.el(a.c, 'p') } : null; },
   async seek(t) {
     const wasPlaying = this.playing; this.pause(); this.t = clamp(t, 0, this.plan.dur);
-    const s = this.plan.shots[this.shotAt(this.t)];
-    if (s.v) { const want = this.srcT(s, this.t); if (Math.abs(s.v.currentTime - want) > 0.02 || s.v.readyState < 2) { s.v.currentTime = want; await Promise.race([once(s.v, 'seeked'), sleep(1200)]).catch(() => {}); } }
+    const s = this.plan.shots[this.shotAt(this.t)], waits = [];
+    const go = (v, want) => { if (Math.abs(v.currentTime - want) > 0.02 || v.readyState < 2) { v.currentTime = want; waits.push(Promise.race([once(v, 'seeked'), sleep(1200)]).catch(() => {})); } };
+    if (s.v) go(s.v, this.srcT(s, this.t));
+    if (s.layout && s.layout !== 'full') { const tk = this.talkAt(this.t); if (tk) go(tk.v, tk.src); }
+    await Promise.all(waits);
     this.draw(this.t); this.tick();
     if (wasPlaying) this.play();
   },
@@ -802,80 +1157,130 @@ const Player = {
     this.sync(this.t, true); requestAnimationFrame(loop);
   },
   pause() { if (this.src) { try { this.src.stop(); } catch (e) {} this.src.disconnect(); this.src = null; } this.playing = false; Object.values(this.pool).forEach(v => v.pause()); const b = $('#playBtn'); if (b) b.textContent = '▶'; },
-  sync(t, hard) {   // giữ video khớp thời gian + nạp trước cảnh kế tiếp
+  drive(v, want, hard, freeze) {
+    if (freeze) { if (!v.paused) v.pause(); if (Math.abs(v.currentTime - want) > 0.1) v.currentTime = want; return; }
+    if (v.paused || hard) { if (Math.abs(v.currentTime - want) > 0.08) v.currentTime = want; v.play().catch(() => {}); }
+    else if (Math.abs(v.currentTime - want) > 0.3) v.currentTime = want;
+  },
+  sync(t, hard) {
     const sh = this.plan.shots, i = this.shotAt(t), s = sh[i], keep = new Set();
-    if (s.v) { keep.add(s.v); const want = this.srcT(s, t);
-      if (s.freeze) { if (!s.v.paused) s.v.pause(); if (Math.abs(s.v.currentTime - want) > 0.1) s.v.currentTime = want; }
-      else { if (s.v.paused || hard) { if (Math.abs(s.v.currentTime - want) > 0.08) s.v.currentTime = want; s.v.play().catch(() => {}); } else if (Math.abs(s.v.currentTime - want) > 0.3) s.v.currentTime = want; } }
-    for (let j = i + 1; j < Math.min(sh.length, i + 3); j++) { const n = sh[j]; if (!n.v || n.v === s.v || n.t0 - t > 1.2) continue; keep.add(n.v); if (n.v._prep !== n) { n.v._prep = n; n.v.pause(); n.v.currentTime = n.src0; } }
+    if (s.v) { keep.add(s.v); this.drive(s.v, this.srcT(s, t), hard, s.freeze); }
+    if (s.layout && s.layout !== 'full') { const tk = this.talkAt(t); if (tk) { keep.add(tk.v); this.drive(tk.v, tk.src, hard); } }
+    for (let j = i + 1; j < Math.min(sh.length, i + 3); j++) { const n = sh[j]; if (n.t0 - t > 1.2) continue;
+      if (n.v && n.v !== s.v) { keep.add(n.v); if (n.v._prep !== n) { n.v._prep = n; n.v.pause(); n.v.currentTime = n.src0; } }
+      if (n.layout && n.layout !== 'full') { const tk = this.talkAt(n.t0 + 0.01); if (tk && !keep.has(tk.v)) { keep.add(tk.v); if (tk.v._prep !== n) { tk.v._prep = n; tk.v.pause(); tk.v.currentTime = tk.src; } } } }
     Object.values(this.pool).forEach(v => { if (!keep.has(v) && !v.paused) v.pause(); });
   },
   tick() { const p = this.plan; if (!p) return; $('#tm').textContent = fmt(this.t) + ' / ' + fmt(p.dur); const ph = $('#phd'); if (ph) ph.style.left = (this.t / p.dur * 100) + '%'; },
   draw(t) {
-    const g = this.g, p = this.plan, st = p.style; if (!p) return;
+    const g = this.g, p = this.plan; if (!p) return; const st = p.style;
     const i = this.shotAt(t), s = p.shots[i], prog = (t - s.t0) / Math.max(0.01, s.t1 - s.t0);
-    // hiệu ứng chuyển cảnh quanh điểm cắt
-    let zx = 1, blur = 0, flash = 0, sx = 0, sy = 0;
+    let zx = 1, blur = 0, flash = 0, sx = 0, sy = 0, glitch = 0, leak = 0, whip = 0;
     p.trans.forEach(tr => { const d = t - tr.t;
-      if (tr.type === 'flash' && d >= 0 && d < 0.22) { flash = Math.max(flash, (1 - d / 0.22) * 0.8); const k = (1 - d / 0.22) * 22; sx = Math.sin(t * 90) * k; sy = Math.cos(t * 70) * k; }
+      if (tr.type === 'flash' && d >= 0 && d < 0.22) { flash = Math.max(flash, (1 - d / 0.22) * 0.8); const k = (1 - d / 0.22) * 22; sx += Math.sin(t * 90) * k; sy += Math.cos(t * 70) * k; }
       if (tr.type === 'zoom' && Math.abs(d) < 0.25) { const k = 1 - Math.abs(d) / 0.25; zx = 1 + k * 0.28; blur = k * 8; }
       if (tr.type === 'punch' && d >= 0 && d < 0.12) zx = Math.max(zx, 1 + (1 - d / 0.12) * 0.05);
+      if (tr.type === 'glitch' && d > -0.06 && d < 0.2) glitch = Math.max(glitch, 1 - Math.abs(d - 0.04) / 0.18);
+      if (tr.type === 'whip' && Math.abs(d) < 0.16) whip = d < 0 ? -Math.pow(1 + d / 0.16, 1.6) : Math.pow(1 - d / 0.16, 1.6);
+      if (tr.type === 'leak' && d > -0.1 && d < 0.6) leak = Math.max(leak, d < 0 ? 1 + d / 0.1 : 1 - d / 0.6);
     });
-    const ready = s.v && s.v.readyState >= 2;
-    if (!(s.v && !ready)) {   // khung chưa sẵn sàng → giữ khung trước (không đè chữ lên chữ)
-      const g0 = g; { const g = this.bg; g.save(); g.filter = (p.grade || 'none') + (blur > 0.3 ? ` blur(${blur.toFixed(1)}px)` : '');
-      if (ready) {
-        const v = s.v, vw = v.videoWidth, vh = v.videoHeight, z = (s.z0 + (s.z1 - s.z0) * prog) * zx;
-        const sc = Math.max(W / vw, H / vh) * z, dw = vw * sc, dh = vh * sc;
-        const ay = s.kind === 'talk' ? 0.42 : 0.5;
-        let x = (W - dw) / 2 + (s.px || 0) * W * (prog - 0.5) + sx, y = H * ay - dh * ay + (s.py || 0) * H * (prog - 0.5) + sy;
-        x = clamp(x, W - dw, 0); y = clamp(y, H - dh, 0);
-        g.drawImage(v, x, y, dw, dh);
-      } else { const gr = g.createLinearGradient(0, 0, W, H); gr.addColorStop(0, '#0f3d2a'); gr.addColorStop(1, '#101418'); g.fillStyle = gr; g.fillRect(0, 0, W, H); }
-      g.restore(); }
+    if (st.shake) { const b = p.badges.find(x => t >= x.t0 && t < x.t0 + 0.25); if (b) { const k = (1 - (t - b.t0) / 0.25) * 14; sx += Math.sin(t * 80) * k; sy += Math.cos(t * 60) * k; } }
+    // ---- lớp nền (video) vẽ vào canvas phụ để khung chưa sẵn sàng thì giữ khung trước
+    const ready = v => v && v.readyState >= 2;
+    const lay = s.layout || 'full', tk = lay !== 'full' ? this.talkAt(t) : null;
+    if (!(s.v && !ready(s.v))) {
+      const b = this.bg; b.save(); b.filter = (p.grade || 'none') + (blur > 0.3 ? ` blur(${blur.toFixed(1)}px)` : '') + (Math.abs(whip) > 0.05 ? ` blur(${(Math.abs(whip) * 14).toFixed(1)}px)` : '');
+      b.translate(sx + whip * W * 0.35, sy);
+      const z = (s.z0 + (s.z1 - s.z0) * prog) * zx;
+      if (s.v && lay === 'split') {
+        b.fillStyle = '#000'; b.fillRect(-40, -40, W + 80, H + 80);
+        b.save(); b.beginPath(); b.rect(0, H / 2, W, H / 2); b.clip(); cover(b, s.v, 0, H / 2, W, H / 2, z, 0.5, 0.5, (s.px || 0) * (prog - 0.5), 0); b.restore();
+        b.save(); b.beginPath(); b.rect(0, 0, W, H / 2); b.clip(); if (tk && ready(tk.v)) cover(b, tk.v, 0, 0, W, H / 2, 1.05, 0.5, 0.38); else { b.fillStyle = '#111'; b.fillRect(0, 0, W, H / 2); } b.restore();
+      } else if (s.v) cover(b, s.v, 0, 0, W, H, z, 0.5, s.kind === 'talk' ? 0.42 : 0.5, (s.px || 0) * (prog - 0.5), (s.py || 0) * (prog - 0.5));
+      else { const gr = b.createLinearGradient(0, 0, W, H); gr.addColorStop(0, '#0f3d2a'); gr.addColorStop(1, '#101418'); b.fillStyle = gr; b.fillRect(-40, -40, W + 80, H + 80); }
+      b.restore();
     }
     g.drawImage(this.base, 0, 0);
-    if (st.key === 'C') { const vg = g.createRadialGradient(W / 2, H / 2, H * 0.3, W / 2, H / 2, H * 0.75); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.45)'); g.fillStyle = vg; g.fillRect(0, 0, W, H); }
-    // bóng tối nhẹ sau phụ đề để chữ dễ đọc
+    if (lay === 'split') { g.fillStyle = '#1fa463'; g.fillRect(0, H / 2 - 6, W, 12); }
+    if (lay === 'pip' && tk && ready(tk.v)) { const a = easeBack(clamp((t - s.t0) / 0.3, 0, 1)), r = 165 * a, cx = W - 215, cy = 470;
+      if (r > 2) { g.save(); g.beginPath(); g.arc(cx, cy, r, 0, 7); g.closePath(); g.clip(); g.filter = p.grade || 'none'; cover(g, tk.v, cx - r, cy - r, 2 * r, 2 * r, 1.25, 0.5, 0.36); g.restore(); g.lineWidth = 10; g.strokeStyle = '#fff'; g.beginPath(); g.arc(cx, cy, r, 0, 7); g.stroke(); g.lineWidth = 4; g.strokeStyle = '#1fa463'; g.beginPath(); g.arc(cx, cy, r + 9, -1.4, -1.4 + 6.28 * clamp((t - s.t0) / (s.t1 - s.t0), 0, 1)); g.stroke(); } }
+    if (glitch > 0) this.glitch(glitch, t);
+    if (st.key === 'C' || st.grain) { const vg = g.createRadialGradient(W / 2, H / 2, H * 0.3, W / 2, H / 2, H * 0.75); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.45)'); g.fillStyle = vg; g.fillRect(0, 0, W, H); }
+    if (st.grain) { g.save(); g.globalAlpha = 0.07; g.globalCompositeOperation = 'overlay'; const gt = grainTile(), ox = Math.floor(Math.random() * 256), oy = Math.floor(Math.random() * 256); g.translate(-ox, -oy); g.fillStyle = g.createPattern(gt, 'repeat'); g.fillRect(0, 0, W + 256, H + 256); g.restore(); }
+    if (leak > 0) { g.save(); g.globalCompositeOperation = 'screen'; const lx = W * (0.15 + 0.7 * ((t * 0.37) % 1)), lg = g.createRadialGradient(lx, H * 0.25, 10, lx, H * 0.25, H * 0.7); lg.addColorStop(0, `rgba(255,190,110,${0.75 * leak})`); lg.addColorStop(0.4, `rgba(255,90,60,${0.35 * leak})`); lg.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = lg; g.fillRect(0, 0, W, H); g.restore(); }
     const sh = g.createLinearGradient(0, H * 0.55, 0, H * 0.82); sh.addColorStop(0, 'rgba(0,0,0,0)'); sh.addColorStop(0.5, 'rgba(0,0,0,.22)'); sh.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = sh; g.fillRect(0, H * 0.55, W, H * 0.27);
-    this.overlays(t);
+    this.overlays(t, lay);
     if (flash > 0) { g.fillStyle = `rgba(255,255,255,${flash})`; g.fillRect(0, 0, W, H); }
     if (t < 0.18) { g.fillStyle = `rgba(0,0,0,${1 - t / 0.18})`; g.fillRect(0, 0, W, H); }
   },
-  overlays(t) {
+  glitch(k, t) {   // tách kênh màu + xé ngang
+    const g = this.g, R = rng(Math.floor(t * 60) + 7);
+    g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.45 * k;
+    g.filter = 'sepia(1) saturate(8) hue-rotate(-50deg)'; g.drawImage(this.base, 18 * k, 0);
+    g.filter = 'sepia(1) saturate(8) hue-rotate(150deg)'; g.drawImage(this.base, -18 * k, 0); g.restore();
+    for (let i = 0; i < 7; i++) { const y = R() * H, h = 20 + R() * 90, dx = (R() - 0.5) * 160 * k; g.drawImage(this.base, 0, y, W, h, dx, y, W, h); }
+    g.save(); g.globalAlpha = 0.12 * k; g.fillStyle = '#fff'; for (let y = 0; y < H; y += 8) g.fillRect(0, y, W, 2); g.restore();
+  },
+  overlays(t, lay) {
     const g = this.g, p = this.plan; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineJoin = 'round';
-    // thanh tiến độ + nhãn thương hiệu
     if (S.opt.bar) { g.fillStyle = 'rgba(255,255,255,.25)'; g.fillRect(0, 0, W, 10); g.fillStyle = '#1fa463'; g.fillRect(0, 0, W * t / p.dur, 10); }
     if (S.opt.brand) { g.font = `800 30px ${FONT}`; const tw = g.measureText(S.opt.brand).width + 44; g.fillStyle = 'rgba(0,0,0,.45)'; rrect(g, 60, 190, tw, 54, 27); g.fill(); g.fillStyle = '#1fa463'; g.beginPath(); g.arc(84, 217, 7, 0, 7); g.fill(); g.fillStyle = '#fff'; g.textAlign = 'left'; g.fillText(S.opt.brand, 100, 218); g.textAlign = 'center'; }
     // HOOK
     const hk = p.hook; if (hk && t >= hk.t0 && t < hk.t1) {
-      const a = clamp((t - hk.t0) / 0.28, 0, 1), out = clamp((hk.t1 - t) / 0.2, 0, 1), k = easeBack(a);
-      g.save(); g.translate(W / 2, 420); g.rotate(-0.035); g.scale(k, k); g.globalAlpha = out;
+      const a = clamp((t - hk.t0) / 0.28, 0, 1), out = clamp((hk.t1 - t) / 0.2, 0, 1), k = easeBack(a), wob = Math.sin(t * 9) * 0.012;
+      g.save(); g.translate(W / 2, 430); g.rotate(-0.035 + wob); g.scale(k, k); g.globalAlpha = out;
       let fs = 84, ls; do { g.font = `900 ${fs}px ${FONT}`; ls = wrap(g, hk.text, 840); fs -= 6; } while (ls.length > 3 && fs > 50);
       const lh = fs * 1.3;
-      ls.forEach((l, j) => { const y = (j - (ls.length - 1) / 2) * lh, w = g.measureText(l).width + 50; g.fillStyle = j % 2 ? '#fff' : '#ffe14d'; rrect(g, -w / 2, y - lh * 0.47, w, lh * 0.94, 18); g.fill(); g.fillStyle = '#111'; g.fillText(l, 0, y + 3); });
+      ls.forEach((l, j) => { const y = (j - (ls.length - 1) / 2) * lh, w = g.measureText(l).width + 50; g.fillStyle = 'rgba(0,0,0,.3)'; rrect(g, -w / 2 + 8, y - lh * 0.47 + 10, w, lh * 0.94, 18); g.fill(); g.fillStyle = j % 2 ? '#fff' : '#ffe14d'; rrect(g, -w / 2, y - lh * 0.47, w, lh * 0.94, 18); g.fill(); g.fillStyle = '#111'; g.fillText(l, 0, y + 3); });
       g.restore();
     }
+    // SỐ THỨ TỰ Ý CHÍNH
+    p.badges.forEach(b => { if (t < b.t0 || t >= b.t1) return; const a = clamp((t - b.t0) / 0.3, 0, 1), out = clamp((b.t1 - t) / 0.2, 0, 1), k = easeBack(a);
+      g.save(); g.globalAlpha = out; g.translate(135, 380); g.scale(k, k); g.rotate((1 - a) * -0.8);
+      g.fillStyle = '#0d5c36'; g.beginPath(); g.arc(0, 10, 72, 0, 7); g.fill(); g.fillStyle = '#1fa463'; g.beginPath(); g.arc(0, 0, 72, 0, 7); g.fill();
+      g.save(); g.beginPath(); g.arc(0, 0, 72, 0, 7); g.clip(); const sx = -150 + ((t - b.t0) * 500) % 400; const sg = g.createLinearGradient(sx - 40, 0, sx + 40, 0); sg.addColorStop(0, 'rgba(255,255,255,0)'); sg.addColorStop(0.5, 'rgba(255,255,255,.55)'); sg.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = sg; g.fillRect(-80, -80, 160, 160); g.restore();
+      g.fillStyle = '#fff'; g.font = `900 92px ${FONT}`; g.fillText(String(b.n), 0, 6); g.restore();
+      if (b.label) { const la = easeOut((t - b.t0 - 0.15) / 0.3); if (la > 0) { g.save(); g.globalAlpha = out * la; g.font = `900 46px ${FONT}`; const w = g.measureText(b.label).width + 44; g.translate(225 - (1 - la) * 60, 380); g.fillStyle = '#111'; rrect(g, 0, -36, w, 72, 18); g.fill(); g.fillStyle = '#ffe14d'; g.textAlign = 'left'; g.fillText(b.label, 22, 3); g.restore(); g.textAlign = 'center'; } }
+    });
+    // KHOANH TRÒN quanh chi tiết
+    p.rings.forEach(r => { if (t < r.t0 || t >= r.t1) return; const a = easeOut((t - r.t0) / 0.45), out = clamp((r.t1 - t) / 0.2, 0, 1);
+      g.save(); g.globalAlpha = out; g.translate(W / 2 - 20, 860); g.rotate(r.rot); g.lineWidth = 16; g.lineCap = 'round'; g.strokeStyle = '#ffe14d'; g.shadowColor = 'rgba(0,0,0,.5)'; g.shadowBlur = 12;
+      g.beginPath(); g.ellipse(0, 0, 290, 210, 0, -1.2, -1.2 + 6.6 * a); g.stroke(); g.restore(); });
     // CALLOUT
     p.callouts.forEach(c => { if (t < c.t0 || t >= c.t1) return; const a = clamp((t - c.t0) / 0.22, 0, 1), out = clamp((c.t1 - t) / 0.15, 0, 1);
-      g.save(); g.translate(W / 2 - 40, 640); g.rotate(c.rot * Math.PI / 180); const k = easeBack(a); g.scale(k, k); g.globalAlpha = out;
-      g.font = `900 104px ${FONT}`; const w = g.measureText(c.text).width + 70;
-      g.fillStyle = 'rgba(0,0,0,.35)'; rrect(g, -w / 2 + 10, -66 + 12, w, 132, 28); g.fill();
-      g.fillStyle = '#1fa463'; rrect(g, -w / 2, -66, w, 132, 28); g.fill(); g.fillStyle = '#fff'; g.fillText(c.text, 0, 4); g.restore(); });
+      const cy = lay === 'split' ? H / 2 : 640;
+      g.save(); g.translate(W / 2 - 40, cy); g.rotate(c.rot * Math.PI / 180); const k = easeBack(a) * (c.num ? 1 + Math.sin((t - c.t0) * 30) * 0.03 * (1 - a) : 1); g.scale(k, k); g.globalAlpha = out;
+      g.font = `900 ${c.num ? 120 : 104}px ${FONT}`; const w = g.measureText(c.text).width + 70;
+      if (c.num) { g.save(); g.globalAlpha = out * 0.8; for (let i = 0; i < 10; i++) { const an = i / 10 * 6.28 + t * 2; g.strokeStyle = i % 2 ? '#ffe14d' : '#fff'; g.lineWidth = 8; g.beginPath(); g.moveTo(Math.cos(an) * (w / 2 + 20), Math.sin(an) * 90); g.lineTo(Math.cos(an) * (w / 2 + 70 * a), Math.sin(an) * (90 + 50 * a)); g.stroke(); } g.restore(); }
+      g.fillStyle = 'rgba(0,0,0,.35)'; rrect(g, -w / 2 + 10, -70 + 12, w, 140, 28); g.fill();
+      g.fillStyle = c.num ? '#f2555a' : '#1fa463'; rrect(g, -w / 2, -70, w, 140, 28); g.fill(); g.fillStyle = '#fff'; g.fillText(c.text, 0, 4); g.restore(); });
+    // EMOJI
+    p.emojis.forEach(e => { if (t < e.t0 || t >= e.t1) return; const a = (t - e.t0) / (e.t1 - e.t0), k = easeBack(clamp((t - e.t0) / 0.25, 0, 1)), out = clamp((e.t1 - t) / 0.25, 0, 1);
+      const x = e.hook ? W - 120 : e.side ? 820 : 230, y = (e.hook ? 215 : 1140) - a * 70;
+      g.save(); g.globalAlpha = out; g.translate(x, y); g.rotate(e.rot + Math.sin(t * 7) * 0.12); g.scale(k, k); g.font = `${e.hook ? 130 : 120}px ${EFONT}`; g.fillText(e.e, 0, 0); g.restore(); });
     // PHỤ ĐỀ
     const line = p.caps.find(c => t >= c.t0 && t < c.t1);
-    if (line && !(p.cta && t >= p.cta.t0 + 0.6 && p.capStyle === 'box' && false)) this.caption(line, t, p.capStyle);
+    if (line) this.caption(line, t, p.capStyle);
     // CTA
     const ct = p.cta; if (ct && t >= ct.t0) {
       const a = clamp((t - ct.t0) / 0.35, 0, 1), k = easeBack(a), pulse = 1 + Math.sin((t - ct.t0) * 7) * 0.02;
-      g.save(); g.translate(W / 2 - 30, 1060 + (1 - a) * 120); g.globalAlpha = a; g.scale(pulse, pulse);
+      g.save(); g.translate(W / 2 - 30, 1000 + (1 - a) * 120); g.globalAlpha = a; g.scale(pulse, pulse);
       g.font = `800 52px ${FONT}`; const ls = wrap(g, ct.text, 640).slice(0, 3), hh = ls.length * 66 + 70, ww = 880;
       g.fillStyle = 'rgba(0,0,0,.35)'; rrect(g, -ww / 2 + 8, -hh / 2 + 12, ww, hh, 36); g.fill();
       g.fillStyle = '#fff'; rrect(g, -ww / 2, -hh / 2, ww, hh, 36); g.fill();
       g.fillStyle = '#111'; g.textAlign = 'left'; ls.forEach((l, j) => g.fillText(l, -ww / 2 + 48, (j - (ls.length - 1) / 2) * 66 + 3));
       g.fillStyle = '#1fa463'; g.beginPath(); g.arc(ww / 2 - 90, 0, 58 * k, 0, 7); g.fill(); g.fillStyle = '#fff'; g.font = `900 64px ${FONT}`; g.textAlign = 'center'; g.fillText('→', ww / 2 - 90 + Math.sin((t - ct.t0) * 6) * 6, 2);
       g.restore();
+      const fa = easeBack(clamp((t - ct.t0 - 0.5) / 0.35, 0, 1)); if (fa > 0) { g.save(); g.translate(W / 2 - 30, 1190); g.scale(fa, fa); g.font = `900 46px ${FONT}`; g.fillStyle = '#ff2d55'; rrect(g, -150, -40, 300, 80, 40); g.fill(); g.fillStyle = '#fff'; g.fillText('+ Theo dõi', 0, 3);
+        const tap = Math.abs(Math.sin((t - ct.t0) * 4)); g.font = `86px ${EFONT}`; g.fillText('👆', 120, 70 + tap * 26); g.restore(); }
+      if (p.confetti) this.confetti(t - ct.t0);
     }
+  },
+  confetti(d) {
+    if (d < 0 || d > 2.6) return; const g = this.g, R = rng(99), cols = ['#ffe14d', '#1fa463', '#ff2d55', '#4aa3ff', '#fff', '#ff9f1c'];
+    for (let i = 0; i < 90; i++) { const x0 = W * (0.2 + R() * 0.6), vx = (R() - 0.5) * 1300, vy = -900 - R() * 900, rot = R() * 6, vr = (R() - 0.5) * 12, c = cols[i % cols.length];
+      const x = x0 + vx * d, y = 1100 + vy * d + 1500 * d * d; if (y > H + 40) continue;
+      g.save(); g.globalAlpha = clamp(2.6 - d, 0, 1); g.translate(x, y); g.rotate(rot + vr * d); g.fillStyle = c; g.fillRect(-9, -15, 18, 30 * Math.abs(Math.cos(d * 8 + i))); g.restore(); }
   },
   caption(line, t, style) {
     const g = this.g, cx = W / 2 - 30, cy = 1330, a = clamp((t - line.t0) / 0.12, 0, 1);
@@ -884,20 +1289,20 @@ const Player = {
       ls.forEach((l, j) => { const y = cy + (j - (ls.length - 1) / 2) * 84, w = g.measureText(l).width + 44; g.fillStyle = 'rgba(0,0,0,.78)'; rrect(g, cx - w / 2, y - 40, w, 80, 16); g.fill(); g.fillStyle = '#fff'; g.fillText(l, cx, y + 2); });
       return;
     }
-    const size = style === 'pop' ? 76 : 62; g.font = `900 ${size}px ${FONT}`;
-    const words = line.words.map(w => ({ ...w, txt: style === 'pop' ? w.w.toUpperCase() : w.w }));
-    // xếp dòng
-    const space = g.measureText(' ').width, rows = []; let row = [], rw = 0;
+    const size = style === 'pop' ? 76 : style === 'hl' ? 66 : 62; g.font = `900 ${size}px ${FONT}`;
+    const words = line.words.map(w => ({ ...w, txt: style === 'pop' || style === 'hl' ? w.w.toUpperCase() : w.w }));
+    const space = Math.max(g.measureText(' ').width, size * 0.34), rows = []; let row = [], rw = 0;
     words.forEach(w => { const ww = g.measureText(w.txt).width; if (rw + ww > 820 && row.length) { rows.push({ row, rw }); row = []; rw = 0; } row.push({ ...w, ww }); rw += ww + space; });
     if (row.length) rows.push({ row, rw });
-    const lh = size * 1.25, k = style === 'pop' ? 0.85 + 0.15 * easeBack(a) : 1;
+    const lh = size * 1.3, k = style === 'pop' ? 0.85 + 0.15 * easeBack(a) : style === 'hl' ? 0.92 + 0.08 * easeOut(a / 1) : 1;
     g.save(); g.translate(cx, cy); g.scale(k, k);
     rows.forEach((r, j) => {
       let x = -(r.rw - space) / 2; const y = (j - (rows.length - 1) / 2) * lh;
       r.row.forEach(w => {
         const on = t >= w.t0 && t < w.t1 + 0.05, done = t >= w.t1;
-        const col = style === 'pop' ? (on ? '#ffe14d' : '#fff') : (done || on ? '#ffe14d' : '#fff');
-        const sc = style === 'pop' && on ? 1.12 : 1;
+        if (style === 'hl' && on) { const pa = easeBack(clamp((t - w.t0) / 0.12, 0, 1)); g.save(); g.translate(x + w.ww / 2, y); g.rotate(-0.03); g.scale(pa, pa); g.fillStyle = '#1fa463'; rrect(g, -w.ww / 2 - 14, -size * 0.62, w.ww + 28, size * 1.2, 14); g.fill(); g.restore(); }
+        const col = style === 'pop' ? (on ? '#ffe14d' : '#fff') : style === 'hl' ? '#fff' : (done || on ? '#ffe14d' : '#fff');
+        const sc = (style === 'pop' || style === 'hl') && on ? 1.1 : 1;
         g.save(); g.translate(x + w.ww / 2, y); g.scale(sc, sc); g.textAlign = 'center';
         g.lineWidth = 14; g.strokeStyle = 'rgba(0,0,0,.9)'; g.strokeText(w.txt, 0, 2); g.fillStyle = col; g.fillText(w.txt, 0, 2); g.restore();
         x += w.ww + space;
@@ -941,7 +1346,7 @@ async function exportVideo() {
   if (S.api && S.token) call('videoLog', { title: p.hook ? p.hook.text : '', variant: p.key + '. ' + p.style.name, duration: Math.round(p.dur * 10) / 10, score: p.score.score, note: S.clips.length + ' clip' }).catch(() => {});
 }
 
-window.__VS = { S, Player, buildPlan, evaluate, direct, alignScript, addFiles, mkSent, exportVideo };
+window.__VS = { S, Player, buildPlan, evaluate, direct, alignScript, addFiles, mkSent, exportVideo, selectVariant };
 boot();
 </script>
 </body>
