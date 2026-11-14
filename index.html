@@ -84,7 +84,7 @@ details.book summary{cursor:pointer;font-weight:700}details.book ol{padding-left
 <div id="app"></div>
 <script type="module">
 /* ===================== DỰNG VIDEO – OPPO MIỀN ĐÔNG (Đợt 1) ===================== */
-const VERSION = '2026.11.14-1810';
+const VERSION = '2026.11.14-1830';
 const W = 1080, H = 1920, FPS = 30;
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -253,11 +253,13 @@ function genScript(P, R) {
 }
 /* ---------- Gọi Gemini: tự tìm model "flash" mới nhất mà key dùng được ---------- */
 const GEM = 'https://generativelanguage.googleapis.com/v1beta/';
+async function tfetch(url, opt, ms) { const ac = new AbortController(), tm = setTimeout(() => ac.abort(), ms); try { return await fetch(url, { ...opt, signal: ac.signal }); } catch (e) { throw new Error(e.name === 'AbortError' ? 'AI phản hồi quá lâu (' + Math.round(ms / 1000) + 's)' : e.message); } finally { clearTimeout(tm); } }
+let gemStatus = () => {};
 async function gemModels() {
   try { const c = JSON.parse(load('vs_gem_models') || 'null'); if (c && c.key === S.gemKey.slice(-6) && Date.now() - c.at < 86400000) return c.list; } catch (e) {}
   let list = [];
   try {
-    const r = await fetch(GEM + 'models?pageSize=200', { headers: { 'x-goog-api-key': S.gemKey } }); const j = await r.json();
+    gemStatus('đang tìm đời AI phù hợp…'); const r = await tfetch(GEM + 'models?pageSize=200', { headers: { 'x-goog-api-key': S.gemKey } }, 12000); const j = await r.json();
     if (j.error) throw new Error(j.error.message);
     const ver = n => { const m = n.match(/gemini-(\d+(?:\.\d+)?)/); return m ? parseFloat(m[1]) : 0; };
     list = (j.models || []).filter(m => (m.supportedGenerationMethods || []).includes('generateContent') && /gemini-[\d.]+-flash/.test(m.name) && !/image|tts|audio|live|embed|lite|8b/.test(m.name))
@@ -267,22 +269,29 @@ async function gemModels() {
   store('vs_gem_models', JSON.stringify({ key: S.gemKey.slice(-6), at: Date.now(), list }));
   return list;
 }
-async function gemini(parts, temp) {
+async function gemini(parts, temp) {   // hỏi lần lượt (cách nhau 8s) nhiều đời AI, lấy kết quả đến trước
   const body = JSON.stringify({ contents: [{ parts }], generationConfig: { responseMimeType: 'application/json', temperature: temp == null ? 1 : temp } });
-  const tried = new Set(); let queue = (await gemModels()).slice(0, 3), lastErr;
-  while (queue.length) {
-    const m = queue.shift(); if (tried.has(m)) continue; tried.add(m);
+  let cands = (await gemModels()).slice(0, 4); if (!cands.includes('gemini-flash-latest')) cands.push('gemini-flash-latest');
+  const ctrls = [], errs = []; let done = false;
+  const one = async (m, delay) => {
+    await sleep(delay); if (done) throw new Error('skip');
+    gemStatus(m + ' đang viết…');
+    const ac = new AbortController(); ctrls.push(ac); const tm = setTimeout(() => ac.abort(), 60000);
     try {
-      const r = await fetch(GEM + 'models/' + m + ':generateContent', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': S.gemKey }, body });
-      const j = await r.json();
-      if (j.error) { const sug = String(j.error.message).match(/models\/(gemini-[\w.-]+)/g); if (sug) sug.map(x => x.replace('models/', '')).filter(x => !tried.has(x)).forEach(x => queue.unshift(x)); throw new Error(j.error.message); }
+      const r = await fetch(GEM + 'models/' + m + ':generateContent', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': S.gemKey }, body, signal: ac.signal });
+      const j = await r.json(); if (j.error) throw new Error(j.error.message);
       const t = j.candidates[0].content.parts.map(p => p.text || '').join('');
-      store('vs_gem_models', JSON.stringify({ key: S.gemKey.slice(-6), at: Date.now(), list: [m] }));
-      return JSON.parse(t.replace(/^\s*```(json)?|```\s*$/g, ''));
-    } catch (e) { lastErr = e; }
-  }
-  store('vs_gem_models', null);
-  throw lastErr || new Error('Không gọi được AI');
+      const o = JSON.parse(t.replace(/^\s*```(json)?|```\s*$/g, ''));
+      return { m, o };
+    } catch (e) { errs.push(m + ': ' + (e.name === 'AbortError' ? 'quá lâu' : e.message)); throw e; } finally { clearTimeout(tm); }
+  };
+  try {
+    const win = await Promise.any(cands.map((m, i) => one(m, i * 8000)));
+    done = true; ctrls.forEach(c => c.abort());
+    const rest = cands.filter(x => x !== win.m);
+    store('vs_gem_models', JSON.stringify({ key: S.gemKey.slice(-6), at: Date.now(), list: [win.m].concat(rest) }));
+    return win.o;
+  } catch (e) { done = true; ctrls.forEach(c => c.abort()); store('vs_gem_models', null); throw new Error(errs.filter(x => !/skip/.test(x)).slice(-1)[0] || 'Không gọi được AI'); }
 }
 async function genScriptAI(P) {
   const prompt = `Bạn là đạo diễn TikTok cho chuỗi cửa hàng điện thoại OPPO ở Việt Nam. Viết kịch bản video TikTok dọc ${P.len} giây.
@@ -296,17 +305,29 @@ Trả JSON: {"hooks":[{"text":"","why":""}] (3 câu hook khác kiểu), "formula
   o.hooks = (o.hooks || []).map(h => typeof h === 'string' ? { text: h, why: '' } : h);
   o.by = 'AI Gemini'; return o;
 }
+function normScript(o) {   // chuẩn hoá kết quả AI (đôi khi AI bọc thêm 1 lớp hoặc thiếu trường)
+  if (Array.isArray(o)) o = o[0];
+  if (o && !o.sections) { const k = Object.keys(o).find(x => o[x] && typeof o[x] === 'object' && o[x].sections); if (k) o = o[k]; }
+  if (!o || !Array.isArray(o.sections) || !o.sections.length) throw new Error('AI trả kết quả không đúng mẫu');
+  o.sections = o.sections.filter(x => x && (x.say || x.text)).map(x => ({ part: String(x.part || '').toUpperCase() || 'Ý', label: x.label || '', say: cleanText(x.say || x.text), shot: typeof x.shot === 'string' ? { title: x.shot, tip: '' } : { title: (x.shot && x.shot.title) || '', tip: (x.shot && x.shot.tip) || '' } }));
+  o.hooks = (o.hooks || []).map(h => typeof h === 'string' ? { text: h, why: '' } : { text: cleanText(h.text || ''), why: h.why || '' }).filter(h => h.text);
+  if (!o.hooks.length) o.hooks = [{ text: o.sections[0].say, why: '' }];
+  return o;
+}
 async function makeScript(again) {
   const P = S.plan; P.idea = $('#pIdea').value.trim();
   if (!P.idea) return toast('Nhập ý tưởng video trước nha.', true);
   const b = $('#pGo'); b.disabled = true; b.textContent = '⏳ Đang lên kịch bản…';
-  let o = null;
-  if (S.gemKey) { try { o = await genScriptAI(P); } catch (e) { toast('AI lỗi: ' + esc(e.message).slice(0, 160) + '<br>→ Tạm dùng công thức. Kiểm tra lại key hoặc thử lại sau ít phút.', true, 9000); } }
-  if (!o) o = genScript(P, rng(Date.now() % 1e6));
-  Object.assign(P, { hooks: o.hooks, hookIdx: 0, sections: o.sections, by: o.by, formulaName: FORMULAS[o.formula] || o.formula || '' });
-  P.hooks.forEach(h => h.score = clamp(Math.round(5 + hookScore(h.text, 0) * 1.1), 5, 10));
-  b.disabled = false; b.textContent = '✨ Lên kịch bản';
-  S.slots = {}; syncScriptToEditor(); drawPlan(); goStep(2);
+  const ts = Date.now(); let note = ''; gemStatus = n => note = n; const iv = setInterval(() => b.textContent = `⏳ ${Math.round((Date.now() - ts) / 1000)}s · ${note || 'đang lên kịch bản…'}`, 500);
+  try {
+    let o = null;
+    if (S.gemKey) { try { o = normScript(await genScriptAI(P)); } catch (e) { console.warn('Gemini', e); toast('AI lỗi: ' + esc(e.message).slice(0, 160) + '<br>→ Tạm dùng công thức. Kiểm tra lại key hoặc thử lại sau ít phút.', true, 9000); o = null; } }
+    if (!o) o = genScript(P, rng(Date.now() % 1e6));
+    Object.assign(P, { hooks: o.hooks, hookIdx: 0, sections: o.sections, by: o.by, formulaName: FORMULAS[o.formula] || o.formula || '' });
+    P.hooks.forEach(h => h.score = clamp(Math.round(5 + hookScore(h.text, 0) * 1.1), 5, 10));
+    S.slots = {}; syncScriptToEditor(); drawPlan(); goStep(2);
+  } catch (e) { console.error(e); toast('Lỗi khi lên kịch bản: ' + esc(e.message), true); }
+  finally { clearInterval(iv); gemStatus = () => {}; b.disabled = false; b.textContent = '✨ Lên kịch bản'; }
 }
 function syncScriptToEditor() {
   const P = S.plan; if (!P.sections.length) return;
@@ -541,7 +562,7 @@ function app() {
   $('#pIdea').oninput = e => P.idea = e.target.value;
   $('#pGo').onclick = () => makeScript(); $('#reGen').onclick = () => makeScript(true);
   $('#gemSave').onclick = () => { S.gemKey = $('#gemKey').value.trim(); store('vs_gem', S.gemKey || null); $('#aiPill').textContent = S.gemKey ? '🤖 AI Gemini' : '📐 Công thức'; $('#aiPill').className = 'pill ' + (S.gemKey ? 'g' : ''); toast(S.gemKey ? 'Đã lưu key trên máy này.' : 'Đã xoá key.'); };
-  const drawLinks = () => { $('#links').innerHTML = P.links.map((l, i) => `<div class="sub" style="margin:4px 0">🔗 <a href="${esc(l)}" target="_blank" rel="noopener" style="color:#7ec3ff">${esc(l.length > 60 ? l.slice(0, 60) + '…' : l)}</a> <a href="#" data-rm="${i}" style="color:var(--muted)">✕</a></div>`).join(''); document.querySelectorAll('[data-rm]').forEach(a => a.onclick = e => { e.preventDefault(); P.links.splice(+a.dataset.rm, 1); store('vs_links', JSON.stringify(P.links)); drawLinks(); }); };
+  const drawLinks = () => { $('#links').innerHTML = P.links.map((l, i) => `<div class="sub" style="margin:4px 0;word-break:break-all">🔗 <a href="${esc(l)}" target="_blank" rel="noopener" style="color:#7ec3ff">${esc(l.length > 60 ? l.slice(0, 60) + '…' : l)}</a> <a href="#" data-rm="${i}" style="color:var(--muted)">✕</a></div>`).join(''); document.querySelectorAll('[data-rm]').forEach(a => a.onclick = e => { e.preventDefault(); P.links.splice(+a.dataset.rm, 1); store('vs_links', JSON.stringify(P.links)); drawLinks(); }); };
   try { P.links = JSON.parse(load('vs_links') || '[]'); } catch (e) { P.links = []; }
   $('#lkAdd').onclick = () => { const v = $('#lkIn').value.trim(); if (!/^https?:\/\//.test(v)) return toast('Link chưa đúng.', true); P.links.push(v); store('vs_links', JSON.stringify(P.links)); $('#lkIn').value = ''; drawLinks(); };
   drawLinks();
