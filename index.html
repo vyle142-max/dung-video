@@ -84,7 +84,7 @@ details.book summary{cursor:pointer;font-weight:700}details.book ol{padding-left
 <div id="app"></div>
 <script type="module">
 /* ===================== DỰNG VIDEO – OPPO MIỀN ĐÔNG (Đợt 1) ===================== */
-const VERSION = '2026.11.14-1800';
+const VERSION = '2026.11.14-1810';
 const W = 1080, H = 1920, FPS = 30;
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -251,34 +251,57 @@ function genScript(P, R) {
   secs.push({ part: 'CTA', label: '', say: cta, shot: shopShot });
   return { hooks: hooks.map(h => ({ text: h, why: '' })), sections: secs, formula, by: 'Công thức' };
 }
+/* ---------- Gọi Gemini: tự tìm model "flash" mới nhất mà key dùng được ---------- */
+const GEM = 'https://generativelanguage.googleapis.com/v1beta/';
+async function gemModels() {
+  try { const c = JSON.parse(load('vs_gem_models') || 'null'); if (c && c.key === S.gemKey.slice(-6) && Date.now() - c.at < 86400000) return c.list; } catch (e) {}
+  let list = [];
+  try {
+    const r = await fetch(GEM + 'models?pageSize=200', { headers: { 'x-goog-api-key': S.gemKey } }); const j = await r.json();
+    if (j.error) throw new Error(j.error.message);
+    const ver = n => { const m = n.match(/gemini-(\d+(?:\.\d+)?)/); return m ? parseFloat(m[1]) : 0; };
+    list = (j.models || []).filter(m => (m.supportedGenerationMethods || []).includes('generateContent') && /gemini-[\d.]+-flash/.test(m.name) && !/image|tts|audio|live|embed|lite|8b/.test(m.name))
+      .map(m => m.name.replace(/^models\//, '')).sort((a, b) => (ver(b) - ver(a)) || (/preview|exp/.test(a) - /preview|exp/.test(b)) || a.length - b.length);
+  } catch (e) {}
+  if (!list.length) list = ['gemini-flash-latest', 'gemini-2.5-flash'];
+  store('vs_gem_models', JSON.stringify({ key: S.gemKey.slice(-6), at: Date.now(), list }));
+  return list;
+}
+async function gemini(parts, temp) {
+  const body = JSON.stringify({ contents: [{ parts }], generationConfig: { responseMimeType: 'application/json', temperature: temp == null ? 1 : temp } });
+  const tried = new Set(); let queue = (await gemModels()).slice(0, 3), lastErr;
+  while (queue.length) {
+    const m = queue.shift(); if (tried.has(m)) continue; tried.add(m);
+    try {
+      const r = await fetch(GEM + 'models/' + m + ':generateContent', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': S.gemKey }, body });
+      const j = await r.json();
+      if (j.error) { const sug = String(j.error.message).match(/models\/(gemini-[\w.-]+)/g); if (sug) sug.map(x => x.replace('models/', '')).filter(x => !tried.has(x)).forEach(x => queue.unshift(x)); throw new Error(j.error.message); }
+      const t = j.candidates[0].content.parts.map(p => p.text || '').join('');
+      store('vs_gem_models', JSON.stringify({ key: S.gemKey.slice(-6), at: Date.now(), list: [m] }));
+      return JSON.parse(t.replace(/^\s*```(json)?|```\s*$/g, ''));
+    } catch (e) { lastErr = e; }
+  }
+  store('vs_gem_models', null);
+  throw lastErr || new Error('Không gọi được AI');
+}
 async function genScriptAI(P) {
   const prompt = `Bạn là đạo diễn TikTok cho chuỗi cửa hàng điện thoại OPPO ở Việt Nam. Viết kịch bản video TikTok dọc ${P.len} giây.
 Ý tưởng: ${P.idea}
 Mục tiêu: ${GOALS[P.goal]}. Người xem: ${AUDS[P.aud]}. Giọng điệu: ${TONES[P.tone]}. Công thức: ${P.formula === 'auto' ? 'tự chọn công thức thu hút nhất' : FORMULAS[P.formula]}.
 Quy tắc: hook 0–2s gây tò mò (câu hỏi/con số/so sánh), không chào hỏi. Thân bài 2–3 ý chính bắt đầu bằng "Thứ nhất/Thứ hai/Cuối cùng". CTA rõ 1 hành động. Tổng lời nói ~${Math.round(P.len * 2.6)} chữ, câu ngắn, văn nói tự nhiên tiếng Việt. Mỗi phần có 1 cảnh quay điện thoại/B-roll cụ thể dễ quay tại shop bằng điện thoại.
 Trả JSON: {"hooks":[{"text":"","why":""}] (3 câu hook khác kiểu), "formula":"tên công thức", "sections":[{"part":"HOOK|VẤN ĐỀ|Ý 1|Ý 2|Ý 3|CTA|...","label":"nhãn 1-2 chữ cho ý chính","say":"lời nói","shot":{"title":"cảnh cần quay","tip":"góc quay, độ dài"}}]}. Phần HOOK dùng hook số 1.`;
-  const body = JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: 'application/json', temperature: 1 } });
-  let lastErr;
-  for (const m of ['gemini-2.5-flash', 'gemini-2.0-flash']) {
-    try {
-      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': S.gemKey }, body });
-      const j = await r.json(); if (j.error) throw new Error(j.error.message);
-      const t = j.candidates[0].content.parts.map(p => p.text || '').join('');
-      const o = JSON.parse(t.replace(/^```json|```$/g, ''));
-      if (!o.sections || !o.sections.length) throw new Error('AI trả kết quả rỗng');
-      o.sections.forEach(s => { s.shot = s.shot || { title: '', tip: '' }; s.label = s.label || ''; });
-      o.hooks = (o.hooks || []).map(h => typeof h === 'string' ? { text: h, why: '' } : h);
-      o.by = 'AI Gemini'; return o;
-    } catch (e) { lastErr = e; }
-  }
-  throw lastErr;
+  const o = await gemini([{ text: prompt }], 1);
+  if (!o.sections || !o.sections.length) throw new Error('AI trả kết quả rỗng');
+  o.sections.forEach(x => { x.shot = x.shot || { title: '', tip: '' }; x.label = x.label || ''; x.say = cleanText(x.say); });
+  o.hooks = (o.hooks || []).map(h => typeof h === 'string' ? { text: h, why: '' } : h);
+  o.by = 'AI Gemini'; return o;
 }
 async function makeScript(again) {
   const P = S.plan; P.idea = $('#pIdea').value.trim();
   if (!P.idea) return toast('Nhập ý tưởng video trước nha.', true);
   const b = $('#pGo'); b.disabled = true; b.textContent = '⏳ Đang lên kịch bản…';
   let o = null;
-  if (S.gemKey) { try { o = await genScriptAI(P); } catch (e) { toast('AI lỗi (' + esc(e.message).slice(0, 120) + ') – dùng công thức thay thế.', true); } }
+  if (S.gemKey) { try { o = await genScriptAI(P); } catch (e) { toast('AI lỗi: ' + esc(e.message).slice(0, 160) + '<br>→ Tạm dùng công thức. Kiểm tra lại key hoặc thử lại sau ít phút.', true, 9000); } }
   if (!o) o = genScript(P, rng(Date.now() % 1e6));
   Object.assign(P, { hooks: o.hooks, hookIdx: 0, sections: o.sections, by: o.by, formulaName: FORMULAS[o.formula] || o.formula || '' });
   P.hooks.forEach(h => h.score = clamp(Math.round(5 + hookScore(h.text, 0) * 1.1), 5, 10));
@@ -354,9 +377,7 @@ async function analyzeSample(f) {
       st.textContent = 'AI đang xem các khung hình mẫu…';
       try {
         const parts = [{ text: `Đây là ${keys.length} khung hình rút từ 1 video TikTok mẫu (theo thứ tự thời gian). Hãy nhận xét phong cách dựng và chọn các hiệu ứng tương đồng từ danh sách: ${FX_CATALOG.join(', ')} (glitch=nhiễu màu, whip=lia nhoè, flash=nháy sáng, zoom=zoom chuyển cảnh, leak=vệt sáng, pip=mặt người khung tròn, split=chia đôi màn hình, emoji, badge=số thứ tự, ring=khoanh tròn, shake=rung, grain=hạt phim, confetti=pháo giấy, pop/hl/karaoke/box=kiểu phụ đề). Trả JSON {"effects":[...],"note":"1-2 câu tiếng Việt mô tả phong cách"}` }].concat(keys.map(k => ({ inline_data: { mime_type: 'image/jpeg', data: k.split(',')[1] } })));
-        const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': S.gemKey }, body: JSON.stringify({ contents: [{ parts }], generationConfig: { responseMimeType: 'application/json' } }) });
-        const j = await r.json(); if (j.error) throw new Error(j.error.message);
-        const o = JSON.parse(j.candidates[0].content.parts.map(p => p.text || '').join(''));
+        const o = await gemini(parts, 0.4);
         effects = (o.effects || []).filter(e => FX_CATALOG.includes(e)); note = o.note || '';
       } catch (e) { note = 'AI chưa xem được khung hình (' + String(e.message).slice(0, 60) + '), dùng phân tích nhịp/màu.'; }
     }
