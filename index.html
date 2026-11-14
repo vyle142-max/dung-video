@@ -84,7 +84,7 @@ details.book summary{cursor:pointer;font-weight:700}details.book ol{padding-left
 <div id="app"></div>
 <script type="module">
 /* ===================== DỰNG VIDEO – OPPO MIỀN ĐÔNG (Đợt 1) ===================== */
-const VERSION = '2026.11.14-1730';
+const VERSION = '2026.11.14-1800';
 const W = 1080, H = 1920, FPS = 30;
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -125,13 +125,16 @@ const emojiOf = w => { const s = w.toLowerCase(); for (const [re, e] of EMOJI) i
 
 /* ---------- Thư viện công thức kịch bản (không cần AI) ---------- */
 const FEATS = [
+  { k: /mặt lưng|mặt sau|lưng máy|thiết kế lưng/i, label: 'Mặt lưng', hook: 'Lật mặt sau lên là ai cũng hỏi máy gì!', hooks: ['Lật mặt sau lên là ai cũng hỏi máy gì!', 'Mặt lưng điện thoại mà đẹp như món phụ kiện?', 'Đặt lên bàn cà phê – nhìn mặt lưng là biết máy xịn'], prob: 'Điện thoại bây giờ mặt lưng nhìn đâu cũng giống nhau, dùng vài bữa là bám đầy vân tay', probShot: 'Mặt lưng máy cũ bám vân tay / trầy xước', heroShot: 'Lật máy từ mặt trước sang mặt lưng thật chậm, ánh sáng đẹp', pt: 'mặt lưng thiết kế rất khác biệt, cầm lên là thấy sang',
+    subs: [['Chất liệu', 'mặt lưng hoàn thiện cao cấp, sờ vào mịn tay, hạn chế bám vân tay', 'Cận tay vuốt nhẹ qua mặt lưng dưới ánh sáng', 'Ánh sáng xiên để thấy bề mặt · 3–4s'], ['Màu sắc', 'màu sắc đổi ánh theo góc nhìn, chụp hình lên rất có gu', 'Xoay máy thật chậm dưới đèn cho thấy màu đổi ánh', 'Nền tối, đèn chiếu 1 bên · 4–5s'], ['Cụm camera', 'cụm camera thiết kế gọn gàng, nổi bật mà vẫn hài hoà', 'Cận cụm camera, lia máy chậm từ trên xuống', '3–4s']] },
   { k: /chụp đêm|ban đêm|buổi tối|đêm/i, label: 'Chụp đêm', hook: 'Chụp đêm mà như ban ngày – tin không?', prob: 'Đi chơi tối chụp hình hay bị tối, nhoè, bật flash thì trông rất giả', pt: 'chế độ chụp đêm tự cân sáng, ảnh rõ mà không cần flash', shot: ['Chụp phố đêm / quán cà phê, quay cả màn hình máy lúc bấm chụp', 'Quay từ sau vai, tắt bớt đèn cho thấy ảnh vẫn sáng · 4–5s'] },
   { k: /chân dung|selfie|tự sướng|xoá phông|da /i, label: 'Chân dung', hook: 'Chụp chân dung đẹp như studio chỉ bằng điện thoại?', prob: 'Chụp chân dung bằng điện thoại hay bị bết da, phông nền rối', pt: 'chụp chân dung xoá phông mượt, da vẫn tự nhiên', shot: ['Chụp chân dung 1 bạn, quay cả màn hình máy lúc bấm chụp', 'Hiện kết quả ảnh · 4–6s'] },
   { k: /camera|chụp|ảnh|\d+ ?mp|zoom/i, label: 'Camera', hook: 'Zoom xa thế này mà vẫn nét căng?', prob: 'Chụp hình gửi bạn bè mà ảnh mờ, zoom vào là vỡ hết', pt: 'camera chụp siêu nét, zoom xa vẫn rõ từng chi tiết', shot: ['Cận cụm camera, xoay máy thật chậm', 'Đủ sáng, nền gọn · 3–5s'] },
   { k: /pin|mah|cả ngày/i, label: 'Pin trâu', hook: 'Một ngày không cần sạc – có thật không?', prob: 'Đang dùng giữa chừng thì máy báo hết pin', pt: 'pin dùng thoải mái cả ngày, tối về vẫn còn', shot: ['Cận màn hình hiện % pin buổi tối', 'Cầm máy, bật màn hình cho thấy % pin · 3s'] },
   { k: /sạc|\d+ ?w\b|supervooc/i, label: 'Sạc nhanh', hook: 'Cắm sạc đi tắm, ra là đầy pin?', prob: 'Chờ sạc cả tiếng mới đầy, gấp đi là không kịp', pt: 'sạc siêu nhanh, cắm một lát là đủ dùng cả buổi', shot: ['Cắm sạc, cận màn hình % pin tăng', 'Quay cận cổng sạc rồi màn hình · 3–4s'] },
   { k: /màn hình|hz|hiển thị|amoled/i, label: 'Màn hình', hook: 'Lướt TikTok ngoài nắng vẫn rõ – thử luôn nè!', prob: 'Ra nắng là màn hình tối om, nhìn không thấy gì', pt: 'màn hình sáng rõ, lướt mượt, ra nắng vẫn đẹp', shot: ['Lướt TikTok / ảnh trên máy, quay nghiêng có ánh sáng', '4s'] },
-  { k: /mỏng|nhẹ|thiết kế|màu|cầm/i, label: 'Thiết kế', hook: 'Cầm lên là không muốn bỏ xuống!', prob: 'Điện thoại cầm nặng tay, nhìn thì đại trà', pt: 'thiết kế mỏng nhẹ, màu sang, cầm rất sướng tay', shot: ['Tay cầm máy xoay các góc, ánh sáng lướt qua lưng máy', '4–5s'] },
+  { k: /mỏng|nhẹ|thiết kế|màu|cầm/i, label: 'Thiết kế', hooks: ['Cầm lên là không muốn bỏ xuống!', 'Điện thoại mà nhìn như phụ kiện thời trang?', 'Mỏng cỡ này mà vẫn đủ mạnh?'],
+    subs: [['Độ mỏng nhẹ', 'máy mỏng nhẹ, bỏ túi quần vẫn gọn', 'Bỏ máy vào túi quần / so cạnh vật quen thuộc', '3s'], ['Màu sắc', 'màu sắc sang, đổi ánh theo góc nhìn', 'Xoay máy chậm dưới đèn', '4s'], ['Cảm giác cầm', 'các cạnh bo mềm, cầm lâu không mỏi tay', 'Cận tay cầm máy, lướt màn hình', '3–4s']], hook: 'Cầm lên là không muốn bỏ xuống!', prob: 'Điện thoại cầm nặng tay, nhìn thì đại trà', pt: 'thiết kế mỏng nhẹ, màu sang, cầm rất sướng tay', shot: ['Tay cầm máy xoay các góc, ánh sáng lướt qua lưng máy', '4–5s'] },
   { k: /bền|rơi|chống nước|nước|ip6/i, label: 'Siêu bền', hook: 'Đổ nước lên điện thoại – dám không?', prob: 'Lỡ làm rơi, dính mưa là lo máy hư', pt: 'máy bền, kháng nước kháng bụi, đi mưa không lo', shot: ['Nhỏ vài giọt nước lên mặt máy / để cạnh ly nước', '3–4s'] },
   { k: /game|hiệu năng|chip|ram|lag|giật/i, label: 'Hiệu năng', hook: 'Chơi game cả buổi không giật – thử nha!', prob: 'Chơi game một lát là máy nóng, giật lag', pt: 'chip mạnh, chơi game hay mở nhiều app vẫn mượt', shot: ['Chơi game / mở nhanh nhiều app liên tục', '4–5s'] },
   { k: /\bai\b|trí tuệ|xoá vật|xóa vật|chỉnh ảnh/i, label: 'AI', hook: 'Xoá người thừa trong ảnh chỉ 1 chạm?', prob: 'Ảnh đẹp mà dính người lạ phía sau', pt: 'AI xoá vật thể thừa, chỉnh ảnh chỉ một chạm', shot: ['Quay màn hình dùng AI xoá người thừa trong ảnh', '5s'] },
@@ -201,12 +204,21 @@ function toast(msg, err, ms) { const d = document.createElement('div'); d.classN
 /* ===================== BƯỚC 1–2: Ý TƯỞNG → KỊCH BẢN → DANH SÁCH CẢNH ===================== */
 function productOf(t) { const m = String(t).match(/\b(reno\s?\d+\s?(pro\+?|f|z)?|find\s?[nx]\d*\s?(pro|flip|fold)?|a\d{1,2}[a-z]?\d?)\b/i); return m ? m[0].trim().replace(/\b\w/g, c => c.toUpperCase()).replace(/\s+/g, ' ') : ''; }
 function featsOf(t) { const out = []; FEATS.forEach(f => { if (f.k.test(t) && !out.includes(f)) out.push(f); }); if (out.some(f => f.label === 'Chụp đêm' || f.label === 'Chân dung')) { const i = out.findIndex(f => f.label === 'Camera'); if (i >= 0 && out.length > 3) out.splice(i, 1); } ['Camera', 'Pin trâu', 'Thiết kế', 'Sạc nhanh'].forEach(l => { if (out.length < 3 && !out.some(f => f.label === l)) out.push(FEATS.find(f => f.label === l)); }); return out; }
+function genericTopic(idea, prod) {   // chủ đề chưa có trong thư viện: xây 3 ý quanh đúng chủ đề người dùng gõ
+  let t = cleanText(idea).replace(/^(mình |tôi |em )?(muốn )?(làm video |quay )?(giới thiệu|review|nói về|khoe|show)\s*/i, '').replace(/\s*(của|trên)\s+(oppo\s+)?(reno|find|a)\s*[\w+ ]*$/i, '').replace(/[.,!].*$/, '').trim();
+  if (!t || t.length > 40) t = 'điểm đặc biệt';
+  const T = t.charAt(0).toUpperCase() + t.slice(1), tl = t.toLowerCase(), P2 = prod === 'em này' ? 'máy' : prod;
+  return { label: T, hook: `${T} của ${P2} có gì mà ai cũng hỏi?`, hooks: [`${T} của ${P2} có gì mà ai cũng hỏi?`, `Ít ai để ý ${tl} – cho đến khi xem video này`, `Thử ${tl} của ${P2} – kết quả bất ngờ!`],
+    prob: `Mua điện thoại ít ai để ý tới ${tl}, đến khi dùng mới thấy quan trọng`, pt: `${tl} làm rất chỉn chu`,
+    subs: [['Nhìn tận mắt', `nhìn tận mắt ${tl} mới thấy khác biệt`, `Cận ${tl}, xoay máy chậm`, 'Đủ sáng · 3–5s'], ['Dùng thực tế', `dùng hằng ngày ${tl} rất tiện`, `Cảnh dùng thực tế liên quan tới ${tl}`, '4–5s'], ['Điểm ăn tiền', `điểm mình thích nhất là ${tl} rất đáng tiền`, `Cảnh đẹp nhất về ${tl}`, '3–4s']] };
+}
 function sentenceCase(s) { s = String(s).trim(); return s.charAt(0).toUpperCase() + s.slice(1); }
 function genScript(P, R) {
-  const idea = P.idea || '', prod = productOf(idea) || 'em này', F = featsOf(idea), gift = /quà|tặng|ưu đãi|giảm|khuyến mãi/i.test(idea), weekend = /cuối tuần/i.test(idea) ? 'Cuối tuần này' : 'Hôm nay';
+  const idea = P.idea || '', prod = productOf(idea) || 'em này', matched = FEATS.filter(f => f.k.test(idea)), F = featsOf(idea),
+    focus = matched.length && matched[0].subs && (matched.length === 1 || matched[0].label === 'Mặt lưng') ? matched[0] : matched.length === 0 ? genericTopic(idea, prod) : null, gift = /quà|tặng|ưu đãi|giảm|khuyến mãi/i.test(idea), weekend = /cuối tuần/i.test(idea) ? 'Cuối tuần này' : 'Hôm nay';
   const nha = P.tone === 'vui' ? ' nha' : '', luon = P.tone === 'vui' ? ' luôn' : '';
   let goal = P.goal, formula = P.formula === 'auto' ? (goal === 'tuyen' || goal === 'life' ? 'story' : ['pas', 'ba', 'myth', 'pas'][Math.floor(R() * 4)]) : P.formula;
-  const ctaBy = { shop: `${weekend} ghé shop OPPO gần nhất chụp thử ${prod}${luon}${gift ? ', còn có quà nữa' : ''}${nha}!`, tinhnang: `Bạn thích tính năng nào nhất? Comment cho mình biết${nha}!`, km: `Ưu đãi có hạn, ${weekend.toLowerCase()} ghé shop OPPO gần nhất${nha}!`, tuyen: `Nhắn tin cho page hoặc ghé shop gần nhất để ứng tuyển${nha}!`, life: `Follow để xem tiếp hậu trường${nha}!` };
+  const ctaBy = { shop: `${weekend} ghé shop OPPO gần nhất ${/chụp|camera|ảnh|zoom/i.test(idea) ? 'chụp thử' : 'cầm thử'} ${prod}${luon}${gift ? ', còn có quà nữa' : ''}${nha}!`, tinhnang: `Bạn thích tính năng nào nhất? Comment cho mình biết${nha}!`, km: `Ưu đãi có hạn, ${weekend.toLowerCase()} ghé shop OPPO gần nhất${nha}!`, tuyen: `Nhắn tin cho page hoặc ghé shop gần nhất để ứng tuyển${nha}!`, life: `Follow để xem tiếp hậu trường${nha}!` };
   const cta = ctaBy[goal] || ctaBy.shop;
   const nPts = P.len <= 30 ? 2 : 3;
   let hooks, secs = [];
@@ -219,21 +231,23 @@ function genScript(P, R) {
     secs.push({ part: 'MỞ ĐẦU', label: '', say: tuyen ? `Mình làm PG OPPO được một thời gian rồi, và đây là những điều mình thích nhất.` : `Theo mình một ngày ở shop${luon}${nha}.`, shot: { title: 'Toàn cảnh shop, đi bộ vào từ cửa', tip: 'Quay liền mạch 4–5s' } });
     pts.slice(0, nPts).forEach((p, i) => secs.push({ part: 'Ý ' + (i + 1), label: p[0], say: `${ORD[i === nPts - 1 && i > 0 ? 2 : i]}, ${p[1]}.`, shot: { title: p[2], tip: '3–5s' } }));
   } else {
-    hooks = [F[0].hook, formula === 'myth' ? `Ai bảo điện thoại tầm trung ${F[0].label.toLowerCase()} không ngon?` : `Đừng vội mua điện thoại mới khi chưa xem video này!`, prod !== 'em này' ? `Máy cũ vs ${prod}: khác biệt ở ${F[0].label.toLowerCase()}` : `${nPts} lý do chiếc máy này đáng tiền nhất lúc này`];
+    if (focus) F.splice(0, F.length, focus);
+    hooks = focus && focus.hooks ? focus.hooks.slice() : [F[0].hook, formula === 'myth' ? `Ai bảo ${F[0].label.toLowerCase()} điện thoại thì cái nào cũng như nhau?` : `Đừng vội mua điện thoại mới khi chưa xem video này!`, prod !== 'em này' ? `Máy cũ vs ${prod}: khác biệt ở ${F[0].label.toLowerCase()}` : `${nPts} lý do chiếc máy này đáng tiền nhất lúc này`];
     if (formula === 'ba') {
       secs.push({ part: 'TRƯỚC', label: '', say: sentenceCase(F[0].prob) + '.', shot: { title: 'Máy cũ / ảnh cũ bị lỗi (tối, nhoè, hết pin…)', tip: 'Quay nhanh 3s, càng "thảm" càng tốt' } });
       secs.push({ part: 'SAU', label: '', say: `Còn đây là ${prod}${luon}, nhìn khác biệt liền.`, shot: { title: 'Cùng góc đó nhưng chụp / dùng bằng máy mới', tip: '3–4s, để 2 cảnh liền nhau' } });
     } else if (formula === 'myth') {
-      secs.push({ part: 'SỰ THẬT', label: '', say: `Sự thật là ${prod} làm được hết, mình thử cho xem${luon}.`, shot: { title: 'Cầm máy giơ lên, chuẩn bị thử', tip: '3s' } });
+      secs.push({ part: 'SỰ THẬT', label: '', say: `Sự thật là ${prod} khác hẳn, mình cho xem${luon}.`, shot: { title: 'Cầm máy giơ lên, chuẩn bị thử', tip: '3s' } });
     } else if (formula === 'story') {
       secs.push({ part: 'CÂU CHUYỆN', label: '', say: `Hôm qua có khách ghé shop than: ${F[0].prob.charAt(0).toLowerCase() + F[0].prob.slice(1)}. Mình đưa ${prod} cho thử luôn.`, shot: { title: 'PG đưa máy cho khách thử tại quầy', tip: '4s, xin phép khách nếu lộ mặt' } });
     } else {
-      secs.push({ part: 'VẤN ĐỀ', label: '', say: sentenceCase(F[0].prob) + '.', shot: { title: 'Tay cầm máy loay hoay / ảnh bị lỗi', tip: 'Quay từ sau vai · 3–5s' } });
+      secs.push({ part: 'VẤN ĐỀ', label: '', say: sentenceCase(F[0].prob) + '.', shot: { title: F[0].probShot || 'Tay cầm máy loay hoay / ảnh bị lỗi', tip: 'Quay từ sau vai · 3–5s' } });
     }
-    F.slice(0, nPts).forEach((f, i) => secs.push({ part: 'Ý ' + (i + 1), label: f.label, say: `${ORD[i === nPts - 1 && i > 0 ? 2 : i]}, ${f.pt}.`, shot: { title: f.shot[0], tip: f.shot[1] } }));
+    if (focus) focus.subs.slice(0, nPts).forEach((x, i) => secs.push({ part: 'Ý ' + (i + 1), label: x[0], say: `${ORD[i === nPts - 1 && i > 0 ? 2 : i]}, ${x[1]}.`, shot: { title: x[2], tip: x[3] } }));
+    else F.slice(0, nPts).forEach((f, i) => secs.push({ part: 'Ý ' + (i + 1), label: f.label, say: `${ORD[i === nPts - 1 && i > 0 ? 2 : i]}, ${f.pt}.`, shot: { title: f.shot[0], tip: f.shot[1] } }));
     if (P.len >= 55) secs.push({ part: 'BẰNG CHỨNG', label: '', say: `Mình chụp thử luôn nè, nhìn ảnh là biết${nha}.`, shot: { title: 'Lướt các ảnh/video vừa chụp trên máy', tip: '4–5s' } });
   }
-  secs.unshift({ part: 'HOOK', label: '', say: hooks[0], shot: { title: goal === 'tuyen' || goal === 'life' ? 'Cảnh đẹp nhất của shop / team' : 'Kết quả "wow" nhất (ảnh đêm, zoom xa, % pin…)', tip: 'Cảnh mạnh nhất để mở đầu · 3–4s' } });
+  secs.unshift({ part: 'HOOK', label: '', say: hooks[0], shot: { title: goal === 'tuyen' || goal === 'life' ? 'Cảnh đẹp nhất của shop / team' : (F[0] && F[0].heroShot) || (focus ? `${focus.label}: cảnh ấn tượng nhất, xoay máy chậm dưới ánh sáng đẹp` : `Kết quả "wow" nhất về ${F[0].label.toLowerCase()}`), tip: 'Cảnh mạnh nhất để mở đầu · 3–4s' } });
   secs.push({ part: 'CTA', label: '', say: cta, shot: shopShot });
   return { hooks: hooks.map(h => ({ text: h, why: '' })), sections: secs, formula, by: 'Công thức' };
 }
@@ -247,7 +261,7 @@ Trả JSON: {"hooks":[{"text":"","why":""}] (3 câu hook khác kiểu), "formula
   let lastErr;
   for (const m of ['gemini-2.5-flash', 'gemini-2.0-flash']) {
     try {
-      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${encodeURIComponent(S.gemKey)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body });
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': S.gemKey }, body });
       const j = await r.json(); if (j.error) throw new Error(j.error.message);
       const t = j.candidates[0].content.parts.map(p => p.text || '').join('');
       const o = JSON.parse(t.replace(/^```json|```$/g, ''));
@@ -340,7 +354,7 @@ async function analyzeSample(f) {
       st.textContent = 'AI đang xem các khung hình mẫu…';
       try {
         const parts = [{ text: `Đây là ${keys.length} khung hình rút từ 1 video TikTok mẫu (theo thứ tự thời gian). Hãy nhận xét phong cách dựng và chọn các hiệu ứng tương đồng từ danh sách: ${FX_CATALOG.join(', ')} (glitch=nhiễu màu, whip=lia nhoè, flash=nháy sáng, zoom=zoom chuyển cảnh, leak=vệt sáng, pip=mặt người khung tròn, split=chia đôi màn hình, emoji, badge=số thứ tự, ring=khoanh tròn, shake=rung, grain=hạt phim, confetti=pháo giấy, pop/hl/karaoke/box=kiểu phụ đề). Trả JSON {"effects":[...],"note":"1-2 câu tiếng Việt mô tả phong cách"}` }].concat(keys.map(k => ({ inline_data: { mime_type: 'image/jpeg', data: k.split(',')[1] } })));
-        const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(S.gemKey)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts }], generationConfig: { responseMimeType: 'application/json' } }) });
+        const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': S.gemKey }, body: JSON.stringify({ contents: [{ parts }], generationConfig: { responseMimeType: 'application/json' } }) });
         const j = await r.json(); if (j.error) throw new Error(j.error.message);
         const o = JSON.parse(j.candidates[0].content.parts.map(p => p.text || '').join(''));
         effects = (o.effects || []).filter(e => FX_CATALOG.includes(e)); note = o.note || '';
