@@ -1,0 +1,946 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dựng video</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Be+Vietnam+Pro:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e1013;--card:#171a1f;--card2:#1e2229;--line:#2a2f38;--text:#e8ebef;--muted:#99a2ad;--faint:#6b7480;--brand:#1fa463;--brand2:#168a52;--warn:#f0b429;--bad:#f2555a;--good:#3ccf7f;--acc:#ffe14d}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--text);font:14px/1.45 "Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+.hidden{display:none!important}
+.top{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line);background:#121418;position:sticky;top:0;z-index:5}
+.top h1{margin:0;font-size:17px;font-weight:800;color:var(--brand)}.top .sp{flex:1}.top .me{color:var(--muted);font-size:13px}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card2);border-radius:10px;padding:8px 13px;cursor:pointer;font-weight:600;font-size:13px;white-space:nowrap}
+.btn:hover{border-color:#3a414c}.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.pri{background:var(--brand);border-color:var(--brand);color:#fff}.btn.pri:hover{background:var(--brand2)}
+.btn.sm{padding:5px 9px;font-size:12px;border-radius:8px}.btn.ghost{background:transparent}
+.btn.rec{background:#3a1416;border-color:#7a2228;color:#ffb3b6}
+.inp{width:100%;background:#0f1215;border:1px solid var(--line);border-radius:9px;padding:8px 10px;outline:none}.inp:focus{border-color:var(--brand)}
+textarea.inp{resize:vertical;min-height:64px}
+label.f{display:block;margin-bottom:9px}label.f>span{display:block;font-size:12px;color:var(--muted);margin-bottom:3px;font-weight:600}
+.wrap{display:grid;grid-template-columns:340px minmax(380px,1fr) 380px;gap:14px;padding:14px 16px;align-items:start}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
+.card h3{margin:0 0 10px;font-size:14.5px;display:flex;align-items:center;gap:8px}.card h3 .n{width:22px;height:22px;border-radius:50%;background:var(--brand);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:12px;flex:none}
+.sub{color:var(--muted);font-size:12.5px;margin:0 0 8px}
+.drop{border:1.5px dashed #3a414c;border-radius:12px;padding:16px;text-align:center;color:var(--muted);cursor:pointer;display:block}.drop:hover{border-color:var(--brand);color:var(--text)}
+.clip{display:flex;gap:9px;align-items:center;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:7px;margin-top:7px}
+.clip img,.clip .ph{width:40px;height:62px;border-radius:6px;object-fit:cover;background:#000;flex:none;display:flex;align-items:center;justify-content:center;font-size:20px}
+.clip .meta{flex:1;min-width:0}.clip .nm{font-weight:600;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.clip .st{font-size:11.5px;color:var(--muted)}
+.clip select{background:#0f1215;border:1px solid var(--line);border-radius:7px;padding:3px 5px;font-size:12px}
+.clip .x{background:none;border:0;color:var(--faint);cursor:pointer;font-size:15px}
+.bar{height:5px;border-radius:9px;background:#2a2f38;overflow:hidden;margin-top:4px}.bar i{display:block;height:100%;background:var(--brand);width:0}
+.stage{position:sticky;top:64px}
+.pv{background:#000;border-radius:16px;overflow:hidden;position:relative;margin:0 auto;aspect-ratio:9/16;max-height:calc(100vh - 230px);border:1px solid var(--line)}
+.pv canvas{width:100%;height:100%;display:block}
+.pv .empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--faint);text-align:center;padding:30px;gap:8px}
+.ctrl{display:flex;align-items:center;gap:10px;margin:10px auto 0;max-width:520px}.ctrl .tm{font-variant-numeric:tabular-nums;color:var(--muted);font-size:12.5px;min-width:92px;text-align:right}
+.tl{position:relative;height:46px;background:var(--card2);border-radius:9px;overflow:hidden;flex:1;cursor:pointer;border:1px solid var(--line)}
+.tl .v{position:absolute;top:0;height:28px;border-right:1px solid #0e1013}.tl .a{position:absolute;top:30px;height:7px;border-radius:2px}.tl .c{position:absolute;top:39px;height:5px;background:#8b95a1;border-radius:2px}
+.tl .ph{position:absolute;top:0;bottom:0;width:2px;background:#fff;box-shadow:0 0 6px #fff}
+.var{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;cursor:pointer;background:var(--card2)}.var.on{border-color:var(--brand);box-shadow:0 0 0 1px var(--brand) inset}
+.var b{font-size:13.5px}.var .sc{float:right;font-weight:800;font-size:15px}.var .d{font-size:12px;color:var(--muted);margin-top:3px}
+.chk{list-style:none;margin:0;padding:0}.chk li{display:flex;gap:8px;padding:6px 0;border-bottom:1px solid #22262d;font-size:12.8px}.chk li:last-child{border:0}
+.chk .ic{flex:none;width:20px;text-align:center}.chk .tip{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.big{font-size:34px;font-weight:900;line-height:1}.lbl{font-size:12px;color:var(--muted)}
+.sent{display:flex;gap:7px;align-items:flex-start;padding:6px 0;border-bottom:1px solid #22262d}.sent:last-child{border:0}
+.sent .t{flex:1;font-size:12.8px;outline:none;border-radius:6px;padding:2px 4px}.sent .t:focus{background:#0f1215;box-shadow:0 0 0 1px var(--brand)}
+.sent .tm{font-size:11px;color:var(--faint);flex:none;width:48px;font-variant-numeric:tabular-nums}
+.sent .hk{border:0;background:none;cursor:pointer;opacity:.35;font-size:14px}.sent .hk.on{opacity:1}
+.pill{display:inline-block;font-size:11px;font-weight:700;border-radius:999px;padding:1px 8px;background:#2a2f38;color:var(--muted)}
+.pill.g{background:#123d27;color:var(--good)}.pill.w{background:#3d3112;color:var(--warn)}.pill.b{background:#3d1416;color:var(--bad)}
+.toast{position:fixed;right:16px;bottom:16px;background:#22272f;border:1px solid var(--line);border-radius:10px;padding:10px 14px;max-width:420px;z-index:50;box-shadow:0 10px 30px rgba(0,0,0,.4)}.toast.err{border-color:var(--bad)}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;z-index:40}
+.ov .box{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;width:min(460px,92vw)}
+.login{max-width:380px;margin:12vh auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px}
+details.book summary{cursor:pointer;font-weight:700}details.book ol{padding-left:18px;margin:8px 0 0}details.book li{margin-bottom:6px;font-size:12.8px;color:#cdd3da}
+.prompt{background:#0f1215;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:18px;line-height:1.5;max-height:180px;overflow:auto;margin:8px 0}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mob{display:none;padding:10px 16px;background:#3d3112;color:var(--warn);font-size:13px}
+@media (max-width:1150px){.wrap{grid-template-columns:320px 1fr}.wrap .right{grid-column:1 / -1}.stage{position:static}}
+@media (max-width:760px){.wrap{grid-template-columns:1fr}.mob{display:block}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script type="module">
+/* ===================== DỰNG VIDEO – OPPO MIỀN ĐÔNG (Đợt 1) ===================== */
+const VERSION = '2026.11.14-1500';
+const W = 1080, H = 1920, FPS = 30;
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const fmt = t => { t = Math.max(0, t || 0); const m = Math.floor(t / 60), s = t - m * 60; return m + ':' + (s < 10 ? '0' : '') + s.toFixed(1); };
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const once = (el, ev) => new Promise((res, rej) => { const ok = () => { off(); res(); }, bad = () => { off(); rej(new Error(ev + ' lỗi')); }; const off = () => { el.removeEventListener(ev, ok); el.removeEventListener('error', bad); }; el.addEventListener(ev, ok); el.addEventListener('error', bad); });
+function rng(seed) { let a = (seed >>> 0) || 1; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const rr = (R, [a, b]) => a + (b - a) * R();
+function pct(arr, p) { if (!arr.length) return 0; const s = Float32Array.from(arr).sort(); return s[Math.min(s.length - 1, Math.floor(p * s.length))]; }
+let AC = null; const actx = () => AC || (AC = new (window.AudioContext || window.webkitAudioContext)());
+
+/* ---------- Sổ tay TikTok: kiến thức nền mà "đạo diễn" dùng ---------- */
+const BOOK = [
+  ['Hook 0–2 giây', 'Câu đầu tiên phải gây tò mò / chạm nỗi đau / hứa lợi ích. Không chào hỏi, không giới thiệu tên. Mặt người + chữ to ngay khung đầu.'],
+  ['Giữ nhịp', 'Cứ 2–4 giây phải có thay đổi: cắt cảnh, zoom, chèn cảnh điện thoại, chữ nổi. Cắt bỏ mọi khoảng lặng > 0,3s.'],
+  ['Cấu trúc 60s', '0–3s hook → 3–10s vấn đề/bối cảnh → 10–45s 3 ý chính (mỗi ý 1 cảnh minh hoạ) → 45–55s chốt lợi ích → 55–60s CTA.'],
+  ['3 ý chính', 'Đánh dấu bằng "thứ nhất / thứ hai / cuối cùng" hoặc con số. Mỗi ý có 1 chữ nổi (callout) để người xem lướt vẫn nắm.'],
+  ['Phụ đề', '85% người xem tắt tiếng lúc đầu. Phụ đề to, 2–4 chữ mỗi nhịp, nhấn màu chữ đang nói. Đặt ở 60–70% chiều cao, tránh cột nút bên phải và mô tả bên dưới.'],
+  ['Vùng an toàn', 'Không đặt chữ ở 12% trên cùng, 25% dưới cùng và 140px mép phải – bị giao diện TikTok che.'],
+  ['B-roll', 'Khi người nói nhắc tới tính năng → chuyển ngay sang cảnh quay điện thoại, giọng vẫn chạy (L-cut). Tỉ lệ đẹp: 30–50% thời lượng.'],
+  ['CTA', 'Kết bằng 1 hành động duy nhất, rõ ràng: "Ghé shop gần nhất…", "Comment …", "Follow để xem phần 2". Hiện chữ + nói cùng lúc ở 3–5s cuối.'],
+  ['Âm thanh', 'Giọng nói là chính, nhạc nền nhỏ và tự hạ khi có giọng. Hiệu ứng whoosh khi chuyển cảnh, pop khi chữ nổi xuất hiện.'],
+  ['Thời lượng', 'Ngắn mà đủ ý tốt hơn dài. 25–45s dễ xem hết; tối đa 60s. Video xem hết + xem lại được đẩy mạnh nhất.'],
+];
+const HOOK_WORDS = ['bạn có biết', 'tại sao', 'vì sao', 'đừng', 'sai lầm', 'bí mật', 'mẹo', 'cách', 'chỉ cần', 'ngay', 'miễn phí', 'không ai', 'ít ai', 'đây là', 'thử', 'sự thật', 'quá', 'đỉnh', 'cực', 'nhất', 'ai mà', 'có ai', 'hết', 'liệu', 'giảm', 'tặng', 'mới', '?', '!'];
+const KEY_WORDS = ['camera', 'pin', 'sạc', 'màn hình', 'chống nước', 'ai', 'zoom', 'chụp', 'quay', 'chip', 'ram', 'bền', 'nhanh', 'mỏng', 'nhẹ', 'trả góp', 'giảm', 'tặng', 'quà', 'bảo hành', 'đêm', 'chân dung', 'selfie', 'mah', 'w', 'mp', 'gb', 'hz', 'ip68', 'ip69', 'reno', 'find', 'oppo'];
+const POINT_RE = /^(thứ nhất|thứ hai|thứ ba|đầu tiên|tiếp theo|cuối cùng|thêm nữa|ngoài ra|một là|hai là|ba là|số \d|\d[.)])/i;
+
+/* ---------- Kiểu dựng (phương án) ---------- */
+const STYLES = {
+  A: { key: 'A', name: 'Gọn – rõ ý', desc: 'Giữ thứ tự lời nói, cắt gọn, zoom nhẹ, chuyển cảnh sạch.', face: [2.4, 3.6], br: [1.8, 2.8], trans: 'cut', bpm: 100, every: 7, cap: 'box', grade: 'contrast(1.06) saturate(1.1)', hookFirst: false, teaser: false },
+  B: { key: 'B', name: 'Năng lượng cao', desc: 'Đưa câu "câu khách" nhất lên đầu, cắt nhanh, nháy sáng + rung, chữ bật từng từ.', face: [1.6, 2.6], br: [1.3, 2.1], trans: 'flash', bpm: 124, every: 5, cap: 'pop', grade: 'contrast(1.12) saturate(1.25)', hookFirst: true, teaser: false },
+  C: { key: 'C', name: 'Điện ảnh – teaser', desc: 'Mở bằng cảnh điện thoại đẹp nhất + tiêu đề, chuyển zoom mượt, màu trầm.', face: [2.6, 3.8], br: [2.2, 3.2], trans: 'zoom', bpm: 90, every: 8, cap: 'karaoke', grade: 'contrast(1.05) saturate(0.92) brightness(1.03)', hookFirst: false, teaser: true },
+};
+
+/* ---------- Trạng thái ---------- */
+const S = {
+  api: '', token: '', me: null,
+  clips: [], music: null, seed: 1,
+  opt: { hook: '', cta: 'Ghé shop OPPO gần nhất trải nghiệm ngay!', brand: 'OPPO MIỀN ĐÔNG', cap: 'auto', maxLen: 58, bar: true, script: '', model: 'Xenova/whisper-small' },
+  variants: [], cur: 0,
+};
+let nextId = 1;
+
+/* ---------- Kết nối web nhân sự ---------- */
+async function call(action, payload) {
+  if (!S.api) throw new Error('Chưa có địa chỉ web nhân sự.');
+  const r = await fetch(S.api, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action, token: S.token, payload: payload || {} }) });
+  const j = await r.json();
+  if (!j.ok) throw new Error(j.error || 'Lỗi máy chủ');
+  return j.data;
+}
+function store(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} }
+function load(k) { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } }
+async function boot() {
+  const h = new URLSearchParams(location.hash.slice(1));
+  if (h.get('api')) store('vs_api', h.get('api'));
+  if (h.get('t')) store('vs_tok', h.get('t'));
+  if (h.get('api') || h.get('t')) history.replaceState(null, '', location.pathname + location.search);
+  S.api = load('vs_api'); S.token = load('vs_tok');
+  const local = /^(localhost|127\.0\.0\.1|)$/.test(location.hostname);
+  if (local && h.has('dev')) { S.me = { name: 'Thử nghiệm', role: 'dev', appTitle: 'OPPO MIỀN ĐÔNG' }; return app(); }
+  if (S.api && S.token) { try { S.me = await call('videoMe'); return app(); } catch (e) { store('vs_tok', null); S.token = ''; loginView(e.message); return; } }
+  loginView();
+}
+function loginView(err) {
+  $('#app').innerHTML = `<div class="login"><h2 style="margin:0 0 4px;color:var(--brand)">🎬 Dựng video</h2>
+  <p class="sub">Đăng nhập bằng tài khoản web nhân sự. Cách nhanh nhất: mở web nhân sự → trang <b>Dựng video</b> → bấm <b>Mở trình dựng video</b>.</p>
+  ${err ? `<p class="pill b" style="display:block;border-radius:8px;padding:6px 10px;margin-bottom:10px">${esc(err)}</p>` : ''}
+  <label class="f ${S.api ? 'hidden' : ''}" id="apiBox"><span>Link web nhân sự (…/exec)</span><input class="inp" id="lgApi" value="${esc(S.api)}" placeholder="https://script.google.com/macros/s/…/exec"></label>
+  <label class="f"><span>Tài khoản</span><input class="inp" id="lgU" autocomplete="username"></label>
+  <label class="f"><span>Mật khẩu</span><input class="inp" id="lgP" type="password" autocomplete="current-password"></label>
+  <button class="btn pri" id="lgGo" style="width:100%;justify-content:center">Đăng nhập</button>
+  ${S.api ? '<p class="sub" style="margin-top:10px"><a href="#" id="lgChg" style="color:var(--muted)">Đổi link web nhân sự</a></p>' : ''}</div>`;
+  const go = async () => {
+    const api = $('#lgApi').value.trim(); if (api) { S.api = api; store('vs_api', api); }
+    const b = $('#lgGo'); b.disabled = true; b.textContent = 'Đang đăng nhập…';
+    try { const d = await call('login', { username: $('#lgU').value.trim(), password: $('#lgP').value }); S.token = d.token; store('vs_tok', d.token); S.me = await call('videoMe'); app(); }
+    catch (e) { loginView(e.message); }
+  };
+  $('#lgGo').onclick = go; $('#lgP').onkeydown = e => { if (e.key === 'Enter') go(); };
+  const c = $('#lgChg'); if (c) c.onclick = e => { e.preventDefault(); $('#apiBox').classList.remove('hidden'); };
+}
+function toast(msg, err, ms) { const d = document.createElement('div'); d.className = 'toast' + (err ? ' err' : ''); d.innerHTML = msg; document.body.appendChild(d); setTimeout(() => d.remove(), ms || (err ? 6000 : 3500)); }
+
+/* ---------- Giao diện chính ---------- */
+function app() {
+  $('#app').innerHTML = `
+  <div class="top"><h1>🎬 Dựng video TikTok</h1><span class="pill">v${VERSION}</span><span class="sp"></span>
+    <span class="me">${esc(S.me.name || '')}</span><button class="btn sm ghost" id="logout">Thoát</button></div>
+  <div class="mob">Nên dùng máy tính + Chrome để dựng và xuất video mượt nhất.</div>
+  <div class="wrap">
+    <div class="left">
+      <div class="card"><h3><span class="n">1</span>Nguyên liệu</h3>
+        <p class="sub">Thả clip <b>người nói</b> (có giọng) và clip <b>cảnh quay điện thoại</b>. Web tự nhận loại – sai thì chọn lại.</p>
+        <label class="drop" id="drop"><input type="file" id="fIn" accept="video/*,audio/*" multiple hidden>⬆️ Chọn hoặc kéo thả clip vào đây</label>
+        <div id="clips"></div>
+        <div class="row2" style="margin-top:10px">
+          <button class="btn" id="recBtn">🎙️ Thu giọng</button>
+          <label class="btn" style="justify-content:center">🎵 Nhạc nền<input type="file" id="mIn" accept="audio/*" hidden></label>
+        </div>
+        <div id="musicInfo" class="sub" style="margin:6px 0 0"></div>
+      </div>
+      <div class="card"><h3><span class="n">2</span>Lời nói & phụ đề</h3>
+        <p class="sub">AI nghe giọng trong clip để ra phụ đề (chạy ngay trên máy, lần đầu tải mô hình ~250MB). Hoặc dán kịch bản để khớp.</p>
+        <div class="row2"><button class="btn pri" id="asrBtn">🤖 Tạo phụ đề AI</button>
+          <select class="inp" id="asrModel"><option value="Xenova/whisper-small">Chính xác (small)</option><option value="Xenova/whisper-base">Nhanh (base)</option></select></div>
+        <div id="asrSt" class="sub" style="margin-top:6px"></div>
+        <details style="margin-top:6px"><summary class="sub" style="cursor:pointer">✍️ Dán kịch bản thay vì AI</summary>
+          <textarea class="inp" id="script" placeholder="Mỗi câu một dòng. Có người nói: web khớp câu vào giọng nói. Không có người nói: chữ chạy theo cảnh quay.">${esc(S.opt.script)}</textarea>
+          <button class="btn sm" id="alignBtn" style="margin-top:6px">Khớp kịch bản</button></details>
+        <div id="sents" style="margin-top:8px"></div>
+      </div>
+      <div class="card"><h3><span class="n">3</span>Chữ & thông điệp</h3>
+        <label class="f"><span>Tiêu đề hook (0–2s đầu) – để trống web tự chọn</span><input class="inp" id="oHook" value="${esc(S.opt.hook)}" placeholder="VD: CHỤP ĐÊM MÀ NHƯ BAN NGÀY?"></label>
+        <label class="f"><span>Kêu gọi hành động (CTA) cuối video</span><input class="inp" id="oCta" value="${esc(S.opt.cta)}"></label>
+        <div class="row2"><label class="f"><span>Nhãn thương hiệu</span><input class="inp" id="oBrand" value="${esc(S.opt.brand)}"></label>
+          <label class="f"><span>Kiểu phụ đề</span><select class="inp" id="oCap"><option value="auto">Theo phương án</option><option value="pop">Bật từng từ</option><option value="box">Hộp đen</option><option value="karaoke">Karaoke</option></select></label></div>
+        <div class="row2"><label class="f"><span>Dài tối đa (giây)</span><input class="inp" id="oLen" type="number" min="10" max="60" value="${S.opt.maxLen}"></label>
+          <label class="f"><span>Thanh tiến độ</span><select class="inp" id="oBar"><option value="1">Có</option><option value="0">Không</option></select></label></div>
+      </div>
+    </div>
+    <div class="mid"><div class="stage">
+      <div class="pv" id="pv"><canvas id="cv" width="${W}" height="${H}"></canvas>
+        <div class="empty" id="pvEmpty"><div style="font-size:42px">🎞️</div><div>Thêm clip rồi bấm <b>Đạo diễn</b> để web tự dựng 3 phương án.</div></div></div>
+      <div class="ctrl"><button class="btn" id="playBtn" disabled>▶</button><div class="tl" id="tl"></div><span class="tm" id="tm">0:00.0 / 0:00.0</span></div>
+      <div class="ctrl" style="justify-content:center">
+        <button class="btn pri" id="dirBtn" disabled>🎬 Đạo diễn (3 phương án)</button>
+        <button class="btn" id="rerollBtn" disabled title="Giữ nguyên nguyên liệu, AI sáng tạo lại cách cắt">🎲 Sáng tạo lại</button>
+        <button class="btn" id="expBtn" disabled>⬇️ Xuất video</button></div>
+    </div></div>
+    <div class="right">
+      <div class="card"><h3>🎯 Phương án</h3><div id="vars"><p class="sub">Chưa có – thêm clip rồi bấm Đạo diễn.</p></div></div>
+      <div class="card"><h3>📊 Tự chấm điểm viral</h3><div id="score"><p class="sub">Điểm sẽ hiện sau khi dựng.</p></div></div>
+      <div class="card"><details class="book"><summary>📘 Sổ tay TikTok mà đạo diễn đang dùng</summary><ol>${BOOK.map(b => `<li><b>${esc(b[0])}:</b> ${esc(b[1])}</li>`).join('')}</ol></details>
+        <p class="sub" style="margin-top:10px">Đợt sau: học từ video mẫu bạn gửi, AI (Gemini) xem thử như khán giả thật, chữ nằm sau người, sticker.</p></div>
+    </div>
+  </div>`;
+  $('#logout').onclick = () => { store('vs_tok', null); location.reload(); };
+  const fIn = $('#fIn'); fIn.onchange = () => { addFiles([...fIn.files]); fIn.value = ''; };
+  const dr = $('#drop'); dr.ondragover = e => { e.preventDefault(); dr.style.borderColor = 'var(--brand)'; }; dr.ondragleave = () => dr.style.borderColor = '';
+  dr.ondrop = e => { e.preventDefault(); dr.style.borderColor = ''; addFiles([...e.dataTransfer.files]); };
+  $('#mIn').onchange = e => setMusic(e.target.files[0]);
+  $('#recBtn').onclick = recordVoice;
+  $('#asrModel').value = S.opt.model; $('#asrModel').onchange = e => S.opt.model = e.target.value;
+  $('#asrBtn').onclick = runASR; $('#alignBtn').onclick = alignScript;
+  $('#script').oninput = e => S.opt.script = e.target.value;
+  const bind = (id, k, num) => { const el = $(id); el.onchange = () => { S.opt[k] = num ? Number(el.value) : el.value; if (S.variants.length) direct(false); }; };
+  bind('#oHook', 'hook'); bind('#oCta', 'cta'); bind('#oBrand', 'brand'); bind('#oCap', 'cap'); bind('#oLen', 'maxLen', true);
+  $('#oCap').value = S.opt.cap; $('#oBar').value = S.opt.bar ? '1' : '0'; $('#oBar').onchange = e => { S.opt.bar = e.target.value === '1'; Player.redraw(); };
+  $('#dirBtn').onclick = () => direct(false); $('#rerollBtn').onclick = () => direct(true);
+  $('#playBtn').onclick = () => Player.toggle(); $('#expBtn').onclick = exportVideo;
+  $('#tl').onclick = e => { const r = e.currentTarget.getBoundingClientRect(); const p = Player.plan; if (p) Player.seek(clamp((e.clientX - r.left) / r.width, 0, 1) * p.dur); };
+  Player.init($('#cv'));
+  drawClips(); drawSents();
+}
+
+/* ---------- Nhập & phân tích clip ---------- */
+async function addFiles(files) {
+  for (const f of files) {
+    if (!/^(video|audio)\//.test(f.type) && !/\.(mp4|mov|webm|m4v|mkv|mp3|m4a|wav|aac|ogg)$/i.test(f.name)) continue;
+    const c = { id: nextId++, file: f, name: f.name, url: URL.createObjectURL(f), st: 'Đang phân tích…', prog: 0, kind: '', sents: [] };
+    S.clips.push(c); drawClips();
+    try { await analyzeClip(c); c.st = ''; } catch (e) { c.st = 'Lỗi: ' + e.message; c.bad = true; }
+    drawClips(); refreshButtons();
+  }
+}
+async function analyzeClip(c) {
+  const v = document.createElement('video'); v.muted = true; v.preload = 'auto'; v.playsInline = true; v.src = c.url;
+  await once(v, 'loadedmetadata');
+  c.dur = v.duration; c.w = v.videoWidth; c.h = v.videoHeight; c.hasVideo = c.w > 0 && /^video|\.(mp4|mov|webm|m4v|mkv)$/i.test(c.file.type || c.name);
+  if (!isFinite(c.dur)) { v.currentTime = 1e9; await once(v, 'seeked').catch(() => {}); c.dur = v.duration; v.currentTime = 0; }
+  c.prog = 0.1; drawClips();
+  try { c.audio = await actx().decodeAudioData(await c.file.arrayBuffer()); } catch (e) { c.audio = null; }
+  if (c.audio) audioStats(c);
+  c.prog = 0.35; drawClips();
+  if (c.hasVideo) await frameStats(c, v, p => { c.prog = 0.35 + 0.65 * p; drawClipProg(c); });
+  v.removeAttribute('src'); v.load();
+  if (!c.hasVideo) c.kind = 'vo';
+  else c.kind = (c.audio && c.voicedRatio > 0.28 && c.dyn > 4.5) ? 'talk' : 'broll';
+  if (c.kind === 'broll' && c.audio && c.voicedRatio > 0.45 && c.dyn > 3) c.kind = 'talk';
+}
+function audioStats(c) {
+  const b = c.audio, sr = b.sampleRate, hop = Math.round(sr * 0.05), n = Math.floor(b.length / hop);
+  const ch = []; for (let i = 0; i < b.numberOfChannels; i++) ch.push(b.getChannelData(i));
+  const env = new Float32Array(n);
+  for (let i = 0; i < n; i++) { let s = 0; const o = i * hop; for (let j = 0; j < hop; j += 2) { let x = 0; for (const d of ch) x += d[o + j]; x /= ch.length; s += x * x; } env[i] = Math.sqrt(s / (hop / 2)); }
+  c.env = env;
+  const noise = Math.max(pct(env, 0.15), 1e-4), peak = pct(env, 0.95);
+  c.dyn = peak / noise;
+  const thr = Math.max(noise * 2.2, noise + (peak - noise) * 0.16);
+  const on = Array.from(env, x => x > thr);
+  const segs = []; let s0 = -1, gap = 0;
+  for (let i = 0; i <= n; i++) {
+    if (i < n && on[i]) { if (s0 < 0) s0 = i; gap = 0; }
+    else if (s0 >= 0) { gap++; if (gap > 6 || i === n) { const e = i - gap + 1; if ((e - s0) * 0.05 >= 0.25) segs.push({ t0: s0 * 0.05, t1: e * 0.05 }); s0 = -1; gap = 0; } }
+  }
+  c.voiced = segs;
+  c.voicedRatio = segs.reduce((a, s) => a + s.t1 - s.t0, 0) / Math.max(0.1, c.dur || b.duration);
+  let vs = 0, vn = 0; segs.forEach(s => { for (let i = Math.floor(s.t0 / 0.05); i < Math.floor(s.t1 / 0.05); i++) { vs += env[i] * env[i]; vn++; } });
+  const vr = vn ? Math.sqrt(vs / vn) : peak;
+  c.gain = clamp(0.11 / Math.max(vr, 1e-4), 0.4, 5);
+}
+async function frameStats(c, v, onP) {
+  const cw = 36, chh = 64, cv = document.createElement('canvas'); cv.width = cw; cv.height = chh; const g = cv.getContext('2d', { willReadFrequently: true });
+  const N = clamp(Math.ceil(c.dur / 0.5), 4, 60), fr = []; let prev = null;
+  for (let i = 0; i < N; i++) {
+    const t = Math.min(c.dur - 0.05, (i + 0.5) * c.dur / N);
+    v.currentTime = t; await Promise.race([once(v, 'seeked'), sleep(1500)]);
+    g.drawImage(v, 0, 0, cw, chh); const d = g.getImageData(0, 0, cw, chh).data;
+    let lum = 0; const cur = new Float32Array(cw * chh);
+    for (let p = 0, k = 0; p < d.length; p += 4, k++) { cur[k] = (0.299 * d[p] + 0.587 * d[p + 1] + 0.114 * d[p + 2]) / 255; lum += cur[k]; }
+    lum /= cur.length; let mot = 0; if (prev) { for (let k = 0; k < cur.length; k++) mot += Math.abs(cur[k] - prev[k]); mot /= cur.length; }
+    fr.push({ t, lum, mot }); prev = cur;
+    if (i === Math.floor(N * 0.3)) { const tc = document.createElement('canvas'); tc.width = 80; tc.height = 142; tc.getContext('2d').drawImage(v, 0, 0, 80, 142); c.thumb = tc.toDataURL('image/jpeg', 0.7); }
+    onP((i + 1) / N);
+  }
+  if (fr.length > 1) fr[0].mot = fr[1].mot;
+  c.frames = fr; c.lum = fr.reduce((a, f) => a + f.lum, 0) / fr.length;
+}
+const KIND = { talk: '🗣️ Người nói', broll: '📱 Cảnh quay', vo: '🎙️ Giọng thu', skip: '🚫 Bỏ qua' };
+function drawClips() {
+  const el = $('#clips'); if (!el) return;
+  el.innerHTML = S.clips.map(c => `<div class="clip" data-id="${c.id}">
+    ${c.thumb ? `<img src="${c.thumb}">` : `<div class="ph">${c.kind === 'vo' ? '🎙️' : '🎞️'}</div>`}
+    <div class="meta"><div class="nm" title="${esc(c.name)}">${esc(c.name)}</div>
+      <div class="st">${c.st ? esc(c.st) : `${fmt(c.dur)} · ${c.audio ? (c.voiced.length ? 'có giọng ' + Math.round(c.voicedRatio * 100) + '%' : 'âm thanh nền') : 'không tiếng'}${c.sents.length ? ' · ' + c.sents.length + ' câu' : ''}`}</div>
+      ${c.st && !c.bad ? `<div class="bar"><i style="width:${Math.round(c.prog * 100)}%"></i></div>` : ''}</div>
+    ${c.kind ? `<select data-k="${c.id}">${Object.entries(KIND).filter(([k]) => c.hasVideo ? k !== 'vo' : k === 'vo' || k === 'skip').map(([k, n]) => `<option value="${k}" ${c.kind === k ? 'selected' : ''}>${n}</option>`).join('')}</select>` : ''}
+    <button class="x" data-del="${c.id}" title="Xoá">✕</button></div>`).join('');
+  el.querySelectorAll('select[data-k]').forEach(s => s.onchange = () => { S.clips.find(c => c.id == s.dataset.k).kind = s.value; drawSents(); refreshButtons(); });
+  el.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { S.clips = S.clips.filter(c => c.id != b.dataset.del); drawClips(); drawSents(); refreshButtons(); });
+}
+function drawClipProg(c) { const i = document.querySelector(`.clip[data-id="${c.id}"] .bar i`); if (i) i.style.width = Math.round(c.prog * 100) + '%'; }
+function refreshButtons() {
+  const ready = S.clips.some(c => c.kind && c.kind !== 'skip' && !c.st);
+  const busy = S.clips.some(c => c.st && !c.bad);
+  $('#dirBtn').disabled = !ready || busy;
+  $('#rerollBtn').disabled = !S.variants.length; $('#expBtn').disabled = !S.variants.length; $('#playBtn').disabled = !S.variants.length;
+}
+async function setMusic(f) {
+  if (!f) return;
+  try { S.music = { name: f.name, buf: await actx().decodeAudioData(await f.arrayBuffer()) }; $('#musicInfo').innerHTML = '🎵 ' + esc(f.name) + ' <a href="#" id="mClr" style="color:var(--muted)">bỏ</a>'; $('#mClr').onclick = e => { e.preventDefault(); S.music = null; $('#musicInfo').textContent = 'Dùng nhạc nền tự tạo theo phương án.'; if (S.variants.length) direct(false); }; if (S.variants.length) direct(false); }
+  catch (e) { toast('Không đọc được file nhạc này.', true); }
+}
+
+/* ---------- Thu giọng (có teleprompter) ---------- */
+async function recordVoice() {
+  let stream; try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); } catch (e) { return toast('Không mở được micro: ' + esc(e.message), true); }
+  const ov = document.createElement('div'); ov.className = 'ov';
+  ov.innerHTML = `<div class="box"><h3 style="margin:0 0 6px">🎙️ Thu giọng</h3><p class="sub">Đọc theo kịch bản (nếu có). Giọng thu sẽ đi cùng cảnh quay điện thoại.</p>
+    <div class="prompt">${esc(S.opt.script || 'Chưa có kịch bản – cứ nói tự nhiên. Mẹo: câu đầu là câu gây tò mò nhất!').replace(/\n/g, '<br>')}</div>
+    <div style="display:flex;gap:8px;align-items:center"><button class="btn rec" id="rcGo">⏺ Bắt đầu</button><span id="rcT" class="tm">0:00.0</span><span class="sp" style="flex:1"></span><button class="btn ghost" id="rcX">Huỷ</button></div></div>`;
+  document.body.appendChild(ov);
+  let rec = null, chunks = [], t0 = 0, tm = null;
+  const end = () => { stream.getTracks().forEach(t => t.stop()); clearInterval(tm); ov.remove(); };
+  $('#rcX').onclick = () => { if (rec && rec.state !== 'inactive') rec.onstop = null, rec.stop(); end(); };
+  $('#rcGo').onclick = () => {
+    if (!rec) {
+      rec = new MediaRecorder(stream); rec.ondataavailable = e => e.data.size && chunks.push(e.data);
+      rec.onstop = () => { end(); const f = new File(chunks, 'giong-thu-' + new Date().toTimeString().slice(0, 8).replace(/:/g, '') + '.webm', { type: chunks[0]?.type || 'audio/webm' }); addFiles([f]); };
+      rec.start(); t0 = performance.now(); $('#rcGo').textContent = '⏹ Dừng & dùng'; tm = setInterval(() => $('#rcT').textContent = fmt((performance.now() - t0) / 1000), 100);
+    } else rec.stop();
+  };
+}
+
+/* ---------- Phụ đề: Whisper chạy trong trình duyệt ---------- */
+const ASR_WORKER = `import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.2';
+env.allowLocalModels = false; let asr = null, cur = '';
+self.onmessage = async e => { const { audio, model } = e.data;
+  try {
+    if (!asr || cur !== model) { cur = model; asr = await pipeline('automatic-speech-recognition', model, { dtype: 'q8', progress_callback: p => { if (p.status === 'progress') self.postMessage({ type: 'dl', file: p.file, p: p.progress }); } }); }
+    self.postMessage({ type: 'run' });
+    const out = await asr(audio, { language: 'vietnamese', task: 'transcribe', chunk_length_s: 30, stride_length_s: 5, return_timestamps: true });
+    self.postMessage({ type: 'done', out });
+  } catch (err) { self.postMessage({ type: 'error', msg: String(err && err.message || err) }); } };`;
+let worker = null;
+function getWorker() { if (!worker) worker = new Worker(URL.createObjectURL(new Blob([ASR_WORKER], { type: 'text/javascript' })), { type: 'module' }); return worker; }
+async function to16k(buf) {
+  const len = Math.ceil(buf.duration * 16000), oc = new OfflineAudioContext(1, len, 16000);
+  const s = oc.createBufferSource(); s.buffer = buf; s.connect(oc.destination); s.start(); const r = await oc.startRendering(); return r.getChannelData(0);
+}
+async function runASR() {
+  const list = S.clips.filter(c => (c.kind === 'talk' || c.kind === 'vo') && c.audio);
+  if (!list.length) return toast('Chưa có clip người nói / giọng thu nào có tiếng.', true);
+  const st = $('#asrSt'), btn = $('#asrBtn'); btn.disabled = true;
+  try {
+    for (const [i, c] of list.entries()) {
+      st.textContent = `Clip ${i + 1}/${list.length}: chuẩn bị âm thanh…`;
+      const audio = await to16k(c.audio);
+      const out = await new Promise((res, rej) => {
+        const w = getWorker(); const dl = {};
+        w.onmessage = e => { const m = e.data;
+          if (m.type === 'dl') { dl[m.file] = m.p; const v = Object.values(dl); st.textContent = `Tải mô hình AI (1 lần duy nhất): ${Math.round(v.reduce((a, b) => a + b, 0) / v.length)}%`; }
+          else if (m.type === 'run') st.textContent = `Clip ${i + 1}/${list.length}: AI đang nghe… (có thể mất 1–2 phút)`;
+          else if (m.type === 'done') res(m.out); else if (m.type === 'error') rej(new Error(m.msg)); };
+        w.onerror = e => rej(new Error(e.message || 'Không tải được AI (cần mạng để tải mô hình lần đầu).'));
+        w.postMessage({ audio, model: S.opt.model }, [audio.buffer]);
+      });
+      c.sents = fromChunks(out.chunks || [{ timestamp: [0, c.dur], text: out.text || '' }], c);
+      drawClips(); drawSents();
+    }
+    st.innerHTML = '✅ Xong. Kiểm tra lại chữ bên dưới – bấm vào câu để sửa, ⭐ chọn câu mở đầu, 🗑 bỏ câu thừa.';
+    if (S.variants.length) direct(false);
+  } catch (e) { st.innerHTML = '<span style="color:var(--bad)">Không chạy được AI: ' + esc(e.message) + '</span><br>Bạn có thể dán kịch bản để web tự khớp vào giọng nói.'; }
+  btn.disabled = false;
+}
+function cleanText(t) { return String(t || '').replace(/\s+/g, ' ').replace(/\[.*?\]|\(.*?\)/g, '').trim(); }
+function splitWords(text, t0, t1) {
+  const ws = cleanText(text).split(' ').filter(Boolean); if (!ws.length) return [];
+  const wt = ws.map(w => w.length + 1.5), tot = wt.reduce((a, b) => a + b, 0); let acc = 0;
+  return ws.map((w, i) => { const a = t0 + (t1 - t0) * acc / tot; acc += wt[i]; return { w, t0: a, t1: t0 + (t1 - t0) * acc / tot }; });
+}
+function fromChunks(chunks, c) {
+  const out = [];
+  chunks.forEach(ch => {
+    let [a, b] = ch.timestamp || [0, 0]; if (b == null) b = Math.min(c.dur, a + 4);
+    const txt = cleanText(ch.text); if (!txt) return;
+    // khớp mép câu vào vùng có giọng thật để cắt gọn
+    const vs = (c.voiced || []).filter(v => v.t1 > a && v.t0 < b);
+    if (vs.length) { a = Math.max(a, vs[0].t0); b = Math.min(b, vs[vs.length - 1].t1); if (b - a < 0.3) [a, b] = ch.timestamp; }
+    // tách câu dài theo dấu câu
+    const parts = txt.split(/(?<=[.!?…])\s+/).filter(Boolean), L = parts.reduce((s, p) => s + p.length, 0); let acc = 0;
+    parts.forEach(p => { const pa = a + (b - a) * acc / L; acc += p.length; const pb = a + (b - a) * acc / L; out.push(mkSent(c, pa, pb, p)); });
+  });
+  return out;
+}
+function mkSent(c, t0, t1, text) { return { id: c.id + '_' + Math.round(t0 * 100), t0, t1, text: cleanText(text), words: splitWords(text, t0, t1), hook: false, off: false }; }
+function alignScript() {
+  const lines = S.opt.script.split(/\n+|(?<=[.!?…])\s+/).map(cleanText).filter(Boolean);
+  if (!lines.length) return toast('Chưa có kịch bản.', true);
+  const talks = S.clips.filter(c => (c.kind === 'talk' || c.kind === 'vo') && c.voiced && c.voiced.length);
+  if (!talks.length) { toast('Không có giọng nói – kịch bản sẽ chạy thành chữ theo cảnh quay.'); if (S.variants.length || S.clips.length) direct(false); return; }
+  // ghép mọi đoạn có giọng thành 1 trục thời gian, chia câu theo tỉ lệ số chữ
+  const segs = []; talks.forEach(c => c.voiced.forEach(v => segs.push({ c, ...v })));
+  const T = segs.reduce((a, s) => a + s.t1 - s.t0, 0), L = lines.reduce((a, l) => a + l.length, 0);
+  const at = x => { let r = x; for (const s of segs) { const d = s.t1 - s.t0; if (r <= d + 1e-6) return { c: s.c, t: s.t0 + r }; r -= d; } const s = segs[segs.length - 1]; return { c: s.c, t: s.t1 }; };
+  talks.forEach(c => c.sents = []);
+  let acc = 0;
+  lines.forEach(l => { const a = at(T * acc / L + 0.001); acc += l.length; const b = at(T * acc / L - 0.001); const c = a.c; const t1 = b.c === c ? b.t : c.voiced[c.voiced.length - 1].t1; c.sents.push(mkSent(c, a.t, Math.max(a.t + 0.4, t1), l)); });
+  drawClips(); drawSents(); toast('Đã khớp ' + lines.length + ' câu vào giọng nói.');
+  if (S.variants.length) direct(false);
+}
+function drawSents() {
+  const el = $('#sents'); if (!el) return;
+  const list = S.clips.filter(c => (c.kind === 'talk' || c.kind === 'vo') && c.sents.length);
+  el.innerHTML = list.map(c => `<div class="sub" style="margin:8px 0 2px;font-weight:700">${esc(c.name)}</div>` + c.sents.map((s, i) => `<div class="sent" style="${s.off ? 'opacity:.4' : ''}">
+    <span class="tm">${fmt(s.t0)}</span><span class="t" contenteditable="true" data-c="${c.id}" data-i="${i}">${esc(s.text)}</span>
+    <button class="hk ${s.hook ? 'on' : ''}" data-hk="${c.id}:${i}" title="Dùng làm câu mở đầu">⭐</button><button class="hk ${s.off ? 'on' : ''}" data-off="${c.id}:${i}" title="Bỏ câu này">🗑</button></div>`).join('')).join('');
+  const get = k => { const [cid, i] = k.split(':'); return S.clips.find(c => c.id == cid).sents[i]; };
+  el.querySelectorAll('.t').forEach(t => t.onblur = () => { const s = S.clips.find(c => c.id == t.dataset.c).sents[t.dataset.i]; const v = cleanText(t.textContent); if (v !== s.text) { s.text = v; s.words = splitWords(v, s.t0, s.t1); if (S.variants.length) direct(false); } });
+  el.querySelectorAll('[data-hk]').forEach(b => b.onclick = () => { const s = get(b.dataset.hk); const v = !s.hook; S.clips.forEach(c => c.sents.forEach(x => x.hook = false)); s.hook = v; drawSents(); if (S.variants.length) direct(false); });
+  el.querySelectorAll('[data-off]').forEach(b => b.onclick = () => { const s = get(b.dataset.off); s.off = !s.off; drawSents(); if (S.variants.length) direct(false); });
+}
+
+/* ===================== ĐẠO DIỄN: tự sáng tạo cách dựng ===================== */
+function hookScore(text, energy) {
+  const t = ' ' + String(text || '').toLowerCase() + ' '; let s = 0;
+  HOOK_WORDS.forEach(w => { if (t.includes(w)) s += w.length > 2 ? 1.2 : 0.8; });
+  if (/\d/.test(t)) s += 1;
+  const n = t.trim().split(/\s+/).length; if (n >= 4 && n <= 14) s += 1; if (n > 22) s -= 1.5;
+  return s + (energy || 0);
+}
+function phrasesOf(c) {   // khi chưa có phụ đề: gom các đoạn có giọng thành cụm ≤ 5s
+  const out = []; let cur = null;
+  (c.voiced || []).forEach(v => { if (cur && v.t0 - cur.t1 < 0.45 && v.t1 - cur.t0 < 5) cur.t1 = v.t1; else { cur && out.push(cur); cur = { ...v }; } });
+  cur && out.push(cur);
+  return out.map(p => ({ id: c.id + '_p' + Math.round(p.t0 * 100), t0: p.t0, t1: p.t1, text: '', words: [], hook: false, off: false }));
+}
+function energyOf(c, a, b) { if (!c.env) return 0; let s = 0, n = 0; for (let i = Math.floor(a / 0.05); i < Math.min(c.env.length, Math.ceil(b / 0.05)); i++) { s += c.env[i]; n++; } const m = n ? s / n : 0; return clamp(m * c.gain * 8 - 0.8, -0.5, 1); }
+function pickBroll(brolls, L, used, R, prefer) {
+  let best = null;
+  brolls.forEach((c, ci) => {
+    const fr = c.frames || [{ t: 0, lum: 0.5, mot: 0.02 }], maxS = Math.max(0, c.dur - L - 0.05);
+    for (let k = 0; k <= 12; k++) {
+      const s = maxS * k / 12, e = s + L; const fs = fr.filter(f => f.t >= s - 0.3 && f.t <= e + 0.3);
+      const mot = fs.length ? fs.reduce((a, f) => a + f.mot, 0) / fs.length : 0.02, lum = fs.length ? fs.reduce((a, f) => a + f.lum, 0) / fs.length : 0.5;
+      let sc = Math.min(mot, 0.12) * 6 + Math.min(lum, 0.55) - (lum < 0.18 ? 0.6 : 0) + R() * 0.35;
+      (used[c.id] || []).forEach(([a, b]) => { const ov = Math.max(0, Math.min(b, e) - Math.max(a, s)); sc -= ov / L * 1.4; });
+      sc -= (used['n' + c.id] || 0) * 0.15;
+      if (prefer === 'best') sc += mot * 3;
+      if (!best || sc > best.sc) best = { c, s, sc };
+    }
+  });
+  if (best) { (used[best.c.id] = used[best.c.id] || []).push([best.s, best.s + L]); used['n' + best.c.id] = (used['n' + best.c.id] || 0) + 1; }
+  return best;
+}
+function snapToWord(t, words, lim) { let b = t, d = lim; words.forEach(w => { const x = Math.abs(w.t1 - t); if (x < d) { d = x; b = w.t1 + 0.02; } }); return b; }
+
+function buildPlan(key, seed) {
+  const st = STYLES[key], R = rng(seed * 7919 + key.charCodeAt(0) * 131);
+  const talks = S.clips.filter(c => (c.kind === 'talk' || c.kind === 'vo') && c.audio && !c.st);
+  const brolls = S.clips.filter(c => c.kind === 'broll' && c.hasVideo && !c.st);
+  const maxLen = clamp(Number(S.opt.maxLen) || 58, 10, 60);
+  const plan = { key, style: st, seed, shots: [], audio: [], words: [], caps: [], callouts: [], trans: [], sfx: [], hook: null, cta: null, dur: 0, voiced: [], notes: [] };
+  const used = {};
+  // 1) Các đơn vị lời nói
+  let units = [];
+  talks.forEach(c => {
+    const ss = c.sents.length ? c.sents.filter(s => !s.off) : phrasesOf(c);
+    ss.forEach(s => units.push({ c, s0: Math.max(0, s.t0 - 0.07), s1: Math.min(c.dur, s.t1 + 0.12), sent: s, score: hookScore(s.text, energyOf(c, s.t0, s.t1)) + (s.hook ? 50 : 0) }));
+  });
+  for (let i = 1; i < units.length; i++) { const p = units[i - 1], u = units[i]; if (p.c === u.c && u.s0 < p.s1) { const m = (p.sent.t1 + u.sent.t0) / 2; p.s1 = Math.max(p.sent.t1, m); u.s0 = Math.min(u.sent.t0, p.s1); } }
+  const montage = !units.length;
+  if (!montage) {
+    // 2) Chọn câu mở đầu
+    let hi = units.findIndex(u => u.sent.hook);
+    if (hi < 0 && st.hookFirst) { let b = 0; units.forEach((u, i) => { if (u.score > units[b].score) b = i; }); if (b > 0 && units[b].score > units[0].score + 0.8) hi = b; }
+    if (hi > 0) { const [h] = units.splice(hi, 1); units.unshift(h); plan.notes.push('Đưa câu “' + (h.sent.text || 'mạnh nhất').slice(0, 40) + '” lên đầu làm hook.'); }
+    // 3) Cắt cho vừa thời lượng
+    const intro = st.teaser && brolls.length ? 1.3 : 0, tail = brolls.length || talks.some(c => c.hasVideo) ? 1.6 : 0.6;
+    const budget = maxLen - intro - tail;
+    let total = units.reduce((a, u) => a + u.s1 - u.s0, 0), dropped = 0;
+    while (total > budget && units.length > 2) {
+      let w = -1, ws = 1e9; for (let i = 1; i < units.length - 1; i++) { const sc = units[i].score + (POINT_RE.test(units[i].sent.text) ? 3 : 0) + R() * 0.6; if (sc < ws) { ws = sc; w = i; } }
+      if (w < 0) break; total -= units[w].s1 - units[w].s0; units.splice(w, 1); dropped++;
+    }
+    if (total > budget) { const u = units[units.length - 1]; u.s1 = Math.max(u.s0 + 0.5, u.s1 - (total - budget)); total = units.reduce((a, u) => a + u.s1 - u.s0, 0); }
+    if (dropped) plan.notes.push('Bỏ ' + dropped + ' câu ít quan trọng để vừa ' + maxLen + 's.');
+    // 4) Trục thời gian lời nói
+    units = units.flatMap(u => {   // cắt bỏ khoảng lặng nằm giữa câu
+      const vs = (u.c.voiced || []).filter(v => v.t1 > u.s0 && v.t0 < u.s1).map(v => [Math.max(v.t0, u.s0), Math.min(v.t1, u.s1)]);
+      const pcs = []; vs.forEach(v => { const l = pcs[pcs.length - 1]; if (l && v[0] - l[1] < 0.45) l[1] = v[1]; else pcs.push([...v]); });
+      if (pcs.length < 2) return [u];
+      const P2 = pcs.map(([a, b]) => [Math.max(u.s0, a - 0.06), Math.min(u.s1, b + 0.1)]), D = P2.reduce((x, [a, b]) => x + b - a, 0);
+      const ws = u.sent.words, L = ws.reduce((x, w) => x + w.w.length + 1.5, 0); let acc = 0;
+      const at = f => { let r = f * D; for (const [a, b] of P2) { if (r <= b - a + 1e-6) return a + r; r -= b - a; } return P2[P2.length - 1][1]; };
+      const nw = ws.map(w => { const a = at(acc / L); acc += w.w.length + 1.5; return { w: w.w, t0: a, t1: at(acc / L) }; });
+      return P2.map(([a, b], k) => ({ ...u, s0: a, s1: b, part: k, sent: { ...u.sent, words: nw.filter(w => (w.t0 + w.t1) / 2 >= a && (w.t0 + w.t1) / 2 < b) } }));
+    });
+    let t = intro;
+    units.forEach(u => {
+      const len = u.s1 - u.s0; u.t0 = t; u.t1 = t + len;
+      plan.audio.push({ t0: t, t1: t + len, c: u.c, src0: u.s0 });
+      (u.c.voiced || []).forEach(v => { const a = Math.max(v.t0, u.s0), b = Math.min(v.t1, u.s1); if (b > a) plan.voiced.push([a - u.s0 + t, b - u.s0 + t]); });
+      u.sent.words.forEach(w => { const a = Math.max(w.t0, u.s0), b = Math.min(w.t1, u.s1); if (b > a) plan.words.push({ w: w.w, t0: a - u.s0 + t, t1: b - u.s0 + t, u }); });
+      t += len;
+    });
+    const vEnd = t; plan.dur = vEnd + tail;
+    // 5) Hình: mặt người + chèn cảnh điện thoại (giọng vẫn chạy – L-cut)
+    const cuts = [];
+    units.forEach(u => { if (!u.c.hasVideo) cuts.push([u.t0, u.t1, 'force']); });
+    if (brolls.length) {
+      let cur = intro + (intro ? 1.4 : 2.0);
+      while (cur < vEnd - 1.0) {
+        let b0 = snapToWord(cur + rr(R, st.face), plan.words, 0.4); let b1 = snapToWord(b0 + rr(R, st.br), plan.words, 0.35);
+        if (b0 >= vEnd - 0.8) break;
+        if (b1 > vEnd - 1.0) b1 = vEnd;
+        cuts.push([b0, b1]); cur = b1;
+      }
+    }
+    cuts.sort((a, b) => a[0] - b[0]);
+    const isCut = (a, b) => cuts.some(([x, y]) => a >= x - 1e-3 && b <= y + 1e-3);
+    // điểm chia
+    const pts = new Set([0, plan.dur, intro, vEnd]); units.forEach(u => { pts.add(u.t0); pts.add(u.t1); }); cuts.forEach(([a, b]) => { pts.add(a); pts.add(b); });
+    const P = [...pts].map(x => Math.round(x * 1000) / 1000).filter((x, i, a) => a.indexOf(x) === i && x >= 0 && x <= plan.dur).sort((a, b) => a - b);
+    const raw = [];
+    for (let i = 0; i < P.length - 1; i++) {
+      const a = P[i], b = P[i + 1]; if (b - a < 0.02) continue; const m = (a + b) / 2;
+      if (m < intro) { raw.push({ kind: 'broll', t0: a, t1: b, intro: true }); continue; }
+      if (m > vEnd) { raw.push({ kind: brolls.length ? 'broll' : 'talkTail', t0: a, t1: b, tail: true }); continue; }
+      const u = units.find(u => m >= u.t0 && m < u.t1);
+      if (isCut(a, b) || !u.c.hasVideo) raw.push({ kind: brolls.length ? 'broll' : 'blank', t0: a, t1: b });
+      else raw.push({ kind: 'talk', t0: a, t1: b, c: u.c, src0: u.s0 + (a - u.t0), u });
+    }
+    // gộp các đoạn B-roll liền nhau rồi gán nguồn
+    const merged = []; raw.forEach(s => { const p = merged[merged.length - 1]; if (p && p.kind === s.kind && (s.kind === 'broll' || s.kind === 'blank') && p.t1 - p.t0 < 2.6) p.t1 = s.t1; else merged.push({ ...s }); });
+    let zi = 0, prevTalkEnd = null;
+    merged.forEach(s => {
+      if (s.kind === 'broll') { const L = s.t1 - s.t0, p = pickBroll(brolls, L, used, R, s.intro ? 'best' : ''); s.c = p.c; s.src0 = p.s; const up = R() > 0.5; s.z0 = up ? 1.03 : 1.13; s.z1 = up ? 1.13 : 1.03; s.px = (R() - 0.5) * 0.08; s.py = (R() - 0.5) * 0.05; }
+      else if (s.kind === 'talkTail') { const lu = units[units.length - 1]; s.kind = 'talk'; s.c = lu.c.hasVideo ? lu.c : null; s.src0 = Math.min(lu.s1, lu.c.dur - 0.1); s.freeze = true; s.z0 = 1.12; s.z1 = 1.18; }
+      else if (s.kind === 'talk') {
+        const cont = prevTalkEnd && prevTalkEnd.c === s.c && Math.abs(prevTalkEnd.src - s.src0) < 0.05 && prevTalkEnd.t === s.t0;
+        if (!cont) zi++;
+        const zl = [1.0, 1.14, 1.07][zi % 3]; s.z0 = zl; s.z1 = zl + 0.025; s.px = 0; s.py = 0;
+        prevTalkEnd = { c: s.c, src: s.src0 + s.t1 - s.t0, t: s.t1 };
+      }
+      if (s.kind !== 'talk') prevTalkEnd = null;
+    });
+    // tách cảnh mặt người dài > 3.6s bằng cú zoom
+    merged.forEach(s => {
+      if (s.kind === 'talk' && !s.freeze && s.t1 - s.t0 > 3.6) {
+        const m = snapToWord(s.t0 + (s.t1 - s.t0) / 2, plan.words, 0.5); const s2 = { ...s, t0: m, src0: s.src0 + (m - s.t0), z0: s.z0 > 1.05 ? 1.0 : 1.14 }; s2.z1 = s2.z0 + 0.025; s.t1 = m; s.split = s2;
+      }
+    });
+    merged.forEach(s => { plan.shots.push(s); if (s.split) { plan.shots.push(s.split); delete s.split; } });
+    plan.shots.sort((a, b) => a.t0 - b.t0);
+  } else {
+    // Không có người nói: dựng montage cảnh quay + chữ theo kịch bản, theo nhịp nhạc
+    const lines = S.opt.script.split(/\n+/).map(cleanText).filter(Boolean);
+    const beat = 60 / st.bpm, shotLen = beat * (key === 'B' ? 4 : 6);
+    const srcTot = brolls.reduce((a, c) => a + c.dur, 0);
+    plan.dur = clamp(lines.length ? lines.length * 2.8 + 3 : Math.min(srcTot * 0.8, 25), 8, maxLen);
+    let t = 0; while (t < plan.dur - 0.05) { const L = Math.min(shotLen * (0.8 + R() * 0.4), plan.dur - t); const p = brolls.length ? pickBroll(brolls, L, used, R, t === 0 ? 'best' : '') : null; const up = R() > 0.5; plan.shots.push({ kind: p ? 'broll' : 'blank', t0: t, t1: t + L, c: p && p.c, src0: p ? p.s : 0, z0: up ? 1.03 : 1.14, z1: up ? 1.14 : 1.03, px: (R() - 0.5) * 0.08, py: 0 }); t += L; }
+    const T0 = 0.4, T1 = plan.dur - 3.2, per = (T1 - T0) / Math.max(1, lines.length);
+    lines.forEach((l, i) => splitWords(l, T0 + i * per, T0 + (i + 1) * per - 0.25).forEach(w => plan.words.push(w)));
+    plan.notes.push('Không có giọng người nói → dựng kiểu montage theo nhịp nhạc' + (lines.length ? ' với chữ từ kịch bản.' : '. Thêm kịch bản để có chữ.'));
+  }
+  // 6) Phụ đề: gom từ thành nhịp
+  const capStyle = S.opt.cap === 'auto' ? st.cap : S.opt.cap;
+  const maxW = capStyle === 'pop' ? 3 : capStyle === 'box' ? 5 : 6, maxC = capStyle === 'pop' ? 18 : 30;
+  let line = null;
+  plan.words.forEach((w, i) => {
+    const prev = plan.words[i - 1];
+    const brk = !line || line.words.length >= maxW || (line.text + ' ' + w.w).length > maxC || (prev && w.t0 - prev.t1 > 0.45) || (prev && /[.!?,…:]$/.test(prev.w)) || (prev && prev.u && w.u && prev.u.sent.id !== w.u.sent.id);
+    if (brk) { line = { t0: w.t0, t1: w.t1, words: [], text: '' }; plan.caps.push(line); }
+    line.words.push(w); line.text = (line.text ? line.text + ' ' : '') + w.w; line.t1 = w.t1;
+  });
+  for (let i = plan.caps.length - 1; i > 0; i--) { const l = plan.caps[i], pv = plan.caps[i - 1]; if (l.words.length === 1 && pv.words.length < maxW + 1 && l.t0 - pv.t1 < 0.5 && (pv.text + ' ' + l.text).length <= maxC + 6) { pv.words.push(...l.words); pv.text += ' ' + l.text; pv.t1 = l.t1; plan.caps.splice(i, 1); } }
+  plan.caps.forEach((l, i) => { const n = plan.caps[i + 1]; l.t1 = Math.min(n ? n.t0 : plan.dur, l.t1 + 0.35); });
+  plan.capStyle = capStyle;
+  // 7) Chữ nổi (callout) ở từ khoá / con số
+  let lastCo = -9;
+  plan.words.forEach((w, i) => {
+    const lw = w.w.toLowerCase().replace(/[.,!?…:;"“”]/g, '');
+    const isNum = /\d/.test(lw), isKey = KEY_WORDS.includes(lw) || (i + 1 < plan.words.length && KEY_WORDS.includes(lw + ' ' + plan.words[i + 1].w.toLowerCase().replace(/[.,!?…]/g, '')));
+    if ((isNum || isKey) && w.t0 - lastCo >= st.every && w.t0 > 2.2 && w.t0 < plan.dur - 4) {
+      let txt = w.w.replace(/[.,!?…:;"“”]/g, ''); const nx = plan.words[i + 1];
+      if (nx && (isNum || isKey) && nx.t0 - w.t1 < 0.3 && (txt + ' ' + nx.w).length <= 16) txt += ' ' + nx.w.replace(/[.,!?…:;]/g, '');
+      plan.callouts.push({ t0: w.t0, t1: w.t0 + 1.4, text: txt.toUpperCase(), rot: (R() - 0.5) * 8 }); lastCo = w.t0;
+      plan.sfx.push({ t: w.t0, type: 'pop' });
+    }
+  });
+  // 8) Hook + CTA
+  const fu = plan.words[0] && plan.words[0].u, firstText = fu ? fu.sent.text : (S.opt.script.split('\n')[0] || '');
+  let fw = cleanText(firstText).split(' ').filter(Boolean); if (fw.length > 12) { const cut = fw.findIndex((w, i) => i >= 5 && /[,?!.…]$/.test(w)); fw = fw.slice(0, cut > 0 && cut < 12 ? cut + 1 : 10); fw.push('…'); }
+  const hookTxt = cleanText(S.opt.hook) || fw.join(' ').replace(/[,.]$/, '').replace(/ …$/, '…');
+  if (hookTxt) plan.hook = { t0: 0, t1: Math.min(st.teaser ? 3.0 : 2.6, plan.dur), text: hookTxt.toUpperCase() };
+  if (cleanText(S.opt.cta)) { plan.cta = { t0: Math.max(0, plan.dur - 3.4), t1: plan.dur, text: cleanText(S.opt.cta) }; plan.sfx.push({ t: plan.cta.t0, type: 'ding' }); }
+  // 9) Chuyển cảnh + hiệu ứng âm thanh
+  plan.sfx.push({ t: 0, type: 'hit' });
+  for (let i = 1; i < plan.shots.length; i++) {
+    const a = plan.shots[i - 1], b = plan.shots[i], tt = b.t0;
+    const type = a.kind !== b.kind ? st.trans : (b.kind === 'talk' ? 'punch' : (key === 'B' ? 'flash' : st.trans === 'zoom' ? 'zoom' : 'cut'));
+    plan.trans.push({ t: tt, type });
+    if (type === 'flash' || type === 'zoom') plan.sfx.push({ t: tt - 0.12, type: 'whoosh' });
+    else if (type === 'cut' && a.kind !== b.kind && R() > 0.4) plan.sfx.push({ t: tt - 0.1, type: 'swish' });
+  }
+  plan.grade = st.grade; plan.bpm = st.bpm; plan.montage = montage;
+  plan.score = evaluate(plan);
+  return plan;
+}
+
+/* ===================== TỰ CHẤM: checklist viral + khán giả ảo ===================== */
+function evaluate(p) {
+  const items = []; const add = (label, v, w, tip, okTxt) => items.push({ label, v: clamp(v, 0, 1), w, tip, okTxt });
+  const firstCap = p.caps[0], hookUnit = p.words[0] && p.words[0].u;
+  const hookWordsScore = hookScore(p.hook ? p.hook.text : (firstCap ? firstCap.text : ''), 0);
+  const instant = (p.hook ? 0.5 : 0) + (firstCap && firstCap.t0 < 0.9 ? 0.3 : (p.montage || (p.style.teaser && p.hook)) ? 0.3 : 0) + (hookWordsScore >= 2 ? 0.2 : hookWordsScore >= 1 ? 0.1 : 0);
+  add('Hook trong 2 giây đầu', instant, 18, 'Câu đầu chưa đủ "câu khách". Đặt tiêu đề hook dạng câu hỏi / con số / lợi ích, hoặc ⭐ chọn câu mạnh nhất làm câu mở đầu.', 'Có tiêu đề + lời nói ngay khung đầu');
+  const d = p.dur; add('Thời lượng ' + d.toFixed(0) + 's', d >= 20 && d <= 60 ? (d <= 50 ? 1 : 0.8) : d < 20 ? 0.5 : 0, 8, d > 60 ? 'Quá 60s – giảm số câu.' : d < 20 ? 'Hơi ngắn – thêm 1 ý chính.' : '25–45s là đẹp nhất để người xem xem hết.', '');
+  const ev = new Set([0, p.dur]); p.shots.forEach(s => ev.add(s.t0)); p.callouts.forEach(c => ev.add(c.t0)); if (p.cta) ev.add(p.cta.t0);
+  const evs = [...ev].sort((a, b) => a - b); let mg = 0; for (let i = 1; i < evs.length; i++) mg = Math.max(mg, evs[i] - evs[i - 1]);
+  add('Nhịp thay đổi (dài nhất ' + mg.toFixed(1) + 's không đổi)', mg <= 4 ? 1 : mg <= 5.5 ? 0.5 : 0, 14, 'Có đoạn quá lâu không có thay đổi – thêm cảnh quay điện thoại hoặc bấm 🎲 Sáng tạo lại.', 'Cứ ≤4s có thay đổi');
+  const vt = p.voiced.reduce((a, v) => a + v[1] - v[0], 0);
+  let covT = 0; p.caps.forEach(c => covT += c.t1 - c.t0);
+  const cov = p.montage ? (p.caps.length ? 1 : 0) : vt ? Math.min(1, covT / vt) : 0;
+  add('Phụ đề phủ lời nói (' + Math.round(cov * 100) + '%)', cov >= 0.8 ? 1 : cov >= 0.5 ? 0.6 : cov > 0 ? 0.3 : 0, 12, 'Thiếu phụ đề – bấm 🤖 Tạo phụ đề AI hoặc dán kịch bản.', '');
+  let dead = 0; for (let i = 1; i < p.voiced.length; i++) { const g = p.voiced[i][0] - p.voiced[i - 1][1]; if (g > 0.7) dead++; }
+  add('Không có khoảng lặng thừa', p.montage ? 1 : dead === 0 ? 1 : dead <= 2 ? 0.6 : 0.2, 8, 'Còn ' + dead + ' chỗ ngập ngừng > 0,7s – kiểm tra lại câu, bỏ 🗑 câu thừa.', 'Đã cắt hết chỗ im lặng');
+  const br = p.shots.filter(s => s.kind === 'broll').reduce((a, s) => a + s.t1 - s.t0, 0) / Math.max(1, p.dur);
+  add('Tỉ lệ cảnh điện thoại ' + Math.round(br * 100) + '%', p.montage ? 1 : br >= 0.2 && br <= 0.6 ? 1 : br > 0 ? 0.5 : 0, 10, br === 0 ? 'Chưa có cảnh quay điện thoại – thêm clip B-roll để minh hoạ.' : br < 0.2 ? 'Hơi ít cảnh minh hoạ.' : 'Hơi nhiều cảnh minh hoạ, ít mặt người.', '');
+  add('Có CTA ở cuối', p.cta ? 1 : 0, 10, 'Thêm câu kêu gọi hành động ở mục 3.', 'CTA hiện ở ' + (p.cta ? (p.dur - p.cta.t0).toFixed(1) : 0) + 's cuối');
+  const pts = p.caps.filter(c => POINT_RE.test(c.text)).length;
+  add('3 ý chính rõ ràng', pts >= 2 || p.callouts.length >= 3 ? 1 : p.callouts.length >= 2 ? 0.6 : 0.3, 8, 'Nên nói rõ "thứ nhất / thứ hai / cuối cùng" hoặc nhắc con số, tính năng để web làm chữ nổi.', p.callouts.length + ' chữ nổi nhấn ý');
+  const lums = p.shots.filter(s => s.c && s.c.lum != null).map(s => s.c.lum); const lum = lums.length ? lums.reduce((a, b) => a + b, 0) / lums.length : 0.4;
+  add('Ánh sáng', lum >= 0.3 ? 1 : lum >= 0.2 ? 0.6 : 0.2, 6, 'Clip hơi tối – quay nơi đủ sáng, quay ngược sáng sẽ làm tối mặt.', '');
+  add('Âm thanh', (p.audio.length || S.music) ? 1 : 0.4, 6, 'Chưa có giọng nói – thêm giọng thu hoặc nhạc.', 'Giọng rõ, nhạc tự hạ khi nói');
+  const score = Math.round(items.reduce((a, i) => a + i.v * i.w, 0) / items.reduce((a, i) => a + i.w, 0) * 100);
+  const hold3 = Math.round(clamp(38 + instant * 40 + (p.shots.length > 1 && p.shots[1].t0 < 3 ? 6 : 0), 20, 88));
+  const finish = Math.round(clamp(12 + (score - 55) * 0.55 - Math.max(0, p.dur - 35) * 0.35, 3, 65));
+  // Đường giữ chân ước tính (mỗi giây)
+  const curve = []; let r = 100;
+  for (let t = 0; t <= Math.ceil(p.dur); t++) {
+    if (t === 1) r = 100 - (100 - hold3) * 0.55; else if (t === 3) r = hold3;
+    else if (t > 3) { let drop = 1.1; const gap = evs.find((e, i) => evs[i + 1] - e > 4 && t > e && t < evs[i + 1]); if (gap != null) drop += 1.6; if (p.cta && t >= p.cta.t0) drop += 0.6; r = Math.max(finish, r - drop * (r - finish) / Math.max(8, p.dur - t + 6)); }
+    curve.push(Math.round(r));
+  }
+  return { score, items, hold3, finish, curve };
+}
+
+/* ===================== Chạy đạo diễn + vẽ phương án ===================== */
+async function direct(reroll) {
+  if (reroll) S.seed = Math.floor(Math.random() * 1e6) + 2;
+  const ok = S.clips.some(c => c.kind && c.kind !== 'skip' && !c.st); if (!ok) return;
+  try {
+    S.variants = ['A', 'B', 'C'].map(k => buildPlan(k, S.seed));
+    // phương án tốt nhất lên trước
+    const best = S.variants.reduce((b, v, i) => v.score.score > S.variants[b].score.score ? i : b, 0);
+    if (!reroll && S.cur >= S.variants.length) S.cur = best; if (reroll || !Player.plan) S.cur = best;
+    drawVariants(); await selectVariant(S.cur);
+  } catch (e) { console.error(e); toast('Lỗi khi dựng: ' + esc(e.message), true); }
+  refreshButtons();
+}
+function scoreColor(s) { return s >= 80 ? 'var(--good)' : s >= 60 ? 'var(--warn)' : 'var(--bad)'; }
+function drawVariants() {
+  $('#vars').innerHTML = S.variants.map((v, i) => `<div class="var ${i === S.cur ? 'on' : ''}" data-v="${i}"><span class="sc" style="color:${scoreColor(v.score.score)}">${v.score.score}</span>
+    <b>${v.key}. ${esc(v.style.name)}</b><div class="d">${esc(v.style.desc)} · ${v.dur.toFixed(1)}s · ${v.shots.length} cảnh</div></div>`).join('');
+  document.querySelectorAll('[data-v]').forEach(d => d.onclick = () => selectVariant(+d.dataset.v));
+}
+function drawScore(p) {
+  const s = p.score, items = [...s.items].sort((a, b) => a.v - b.v);
+  const W2 = 320, H2 = 70, pts = s.curve.map((v, i) => `${(i / Math.max(1, s.curve.length - 1) * W2).toFixed(1)},${(H2 - v / 100 * H2).toFixed(1)}`).join(' ');
+  $('#score').innerHTML = `<div style="display:flex;gap:16px;align-items:flex-end;margin-bottom:10px">
+    <div><div class="big" style="color:${scoreColor(s.score)}">${s.score}</div><div class="lbl">/100 điểm</div></div>
+    <div><div style="font-size:20px;font-weight:800">${s.hold3}%</div><div class="lbl">còn xem ở giây 3</div></div>
+    <div><div style="font-size:20px;font-weight:800">${s.finish}%</div><div class="lbl">xem hết</div></div></div>
+    <div class="lbl" style="margin-bottom:3px">👥 Khán giả ảo – đường giữ chân ước tính</div>
+    <svg viewBox="0 0 ${W2} ${H2 + 4}" style="width:100%;height:74px;background:#0f1215;border-radius:8px"><polyline points="${pts}" fill="none" stroke="var(--brand)" stroke-width="2"/></svg>
+    <p class="sub" style="margin:4px 0 8px">Ước tính theo luật TikTok, chưa phải số thật. Đợt sau AI sẽ "xem thử" như người thật.</p>
+    <ul class="chk">${items.map(i => `<li><span class="ic">${i.v >= 0.99 ? '✅' : i.v >= 0.5 ? '🟡' : '❌'}</span><span><b>${esc(i.label)}</b>${i.v < 0.99 ? `<span class="tip">${esc(i.tip)}</span>` : i.okTxt ? `<span class="tip">${esc(i.okTxt)}</span>` : ''}</span></li>`).join('')}</ul>
+    ${p.notes.length ? `<p class="sub" style="margin-top:8px">🎬 Đạo diễn: ${p.notes.map(esc).join(' ')}</p>` : ''}`;
+}
+async function selectVariant(i) {
+  S.cur = i; drawVariants(); const p = S.variants[i]; drawScore(p);
+  $('#pvEmpty').classList.add('hidden');
+  await Player.load(p); drawTimeline(p);
+}
+function drawTimeline(p) {
+  const pc = t => (t / p.dur * 100).toFixed(3) + '%';
+  const col = { talk: '#1fa463', broll: '#3a7bd5', blank: '#555' };
+  $('#tl').innerHTML = p.shots.map(s => `<div class="v" style="left:${pc(s.t0)};width:${pc(s.t1 - s.t0)};background:${col[s.kind] || '#555'}" title="${s.kind === 'talk' ? 'Người nói' : 'Cảnh quay'} ${fmt(s.t0)}"></div>`).join('')
+    + p.audio.map(a => `<div class="a" style="left:${pc(a.t0)};width:${pc(a.t1 - a.t0)};background:#a8e6c4"></div>`).join('')
+    + p.caps.map(c => `<div class="c" style="left:${pc(c.t0)};width:${pc(c.t1 - c.t0)}"></div>`).join('')
+    + '<div class="ph" id="phd"></div>';
+  Player.tick();
+}
+
+/* ===================== ÂM THANH: giọng + nhạc tự tạo + hiệu ứng ===================== */
+function noiseBuf(oc, sec) { const b = oc.createBuffer(1, Math.ceil(oc.sampleRate * sec), oc.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; return b; }
+function sfx(oc, out, type, t) {
+  if (t < 0) t = 0; const g = oc.createGain(); g.connect(out);
+  if (type === 'whoosh' || type === 'swish') {
+    const n = oc.createBufferSource(); n.buffer = noiseBuf(oc, 0.5); const f = oc.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 1.2;
+    const L = type === 'whoosh' ? 0.4 : 0.25; f.frequency.setValueAtTime(300, t); f.frequency.exponentialRampToValueAtTime(type === 'whoosh' ? 5000 : 3000, t + L);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(type === 'whoosh' ? 0.35 : 0.18, t + L * 0.7); g.gain.linearRampToValueAtTime(0, t + L);
+    n.connect(f); f.connect(g); n.start(t); n.stop(t + L + 0.05);
+  } else if (type === 'pop') {
+    const o = oc.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(700, t); o.frequency.exponentialRampToValueAtTime(1500, t + 0.07);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.28, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12); o.connect(g); o.start(t); o.stop(t + 0.14);
+  } else if (type === 'hit') {
+    const o = oc.createOscillator(); o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(40, t + 0.35);
+    g.gain.setValueAtTime(0.6, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.45); o.connect(g); o.start(t); o.stop(t + 0.5);
+  } else if (type === 'ding') {
+    [1318.5, 1760].forEach((fq, i) => { const o = oc.createOscillator(); o.type = 'sine'; o.frequency.value = fq; const gg = oc.createGain(); gg.gain.setValueAtTime(0.0001, t + i * 0.09); gg.gain.exponentialRampToValueAtTime(0.18, t + i * 0.09 + 0.01); gg.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.09 + 0.8); o.connect(gg); gg.connect(g); o.start(t + i * 0.09); o.stop(t + i * 0.09 + 0.85); });
+  }
+}
+function beat(oc, out, bpm, dur, key) {
+  const b = 60 / bpm, roots = key === 'C' ? [110, 87.31, 130.81, 98] : [110, 130.81, 98, 87.31];
+  const kick = t => { const o = oc.createOscillator(), g = oc.createGain(); o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.14); g.gain.setValueAtTime(0.9, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.3); o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.32); };
+  const nb = noiseBuf(oc, 0.3);
+  const hat = (t, v) => { const n = oc.createBufferSource(); n.buffer = nb; const f = oc.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 7000; const g = oc.createGain(); g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.05); n.connect(f); f.connect(g); g.connect(out); n.start(t); n.stop(t + 0.06); };
+  const clap = t => { const n = oc.createBufferSource(); n.buffer = nb; const f = oc.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1500; const g = oc.createGain(); g.gain.setValueAtTime(0.35, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.18); n.connect(f); f.connect(g); g.connect(out); n.start(t); n.stop(t + 0.2); };
+  const pad = (t, f0, L) => { const lp = oc.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = key === 'C' ? 900 : 1400; const g = oc.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.05, t + 0.3); g.gain.linearRampToValueAtTime(0.0001, t + L); lp.connect(g); g.connect(out);
+    [1, 1.26, 1.5, 2].forEach(m => { const o = oc.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f0 * 2 * m; o.detune.value = (Math.random() - 0.5) * 12; o.connect(lp); o.start(t); o.stop(t + L + 0.05); });
+    const bs = oc.createOscillator(), bg = oc.createGain(); bs.type = 'triangle'; bs.frequency.value = f0 / 2; bg.gain.value = 0.22; bs.connect(bg); bg.connect(out); bs.start(t); bs.stop(t + L); };
+  for (let i = 0, t = 0; t < dur; i++, t = i * b) {
+    const bar = Math.floor(i / 4);
+    if (i % 4 === 0) pad(t, roots[bar % 4], b * 4);
+    if (key === 'B' || i % 2 === 0) kick(t);
+    if (i % 4 === 1 || i % 4 === 3) clap(t);
+    hat(t + b / 2, 0.08); if (key === 'B') hat(t, 0.05);
+  }
+}
+async function renderMix(p) {
+  const sr = 44100, oc = new OfflineAudioContext(2, Math.ceil(sr * (p.dur + 0.3)), sr);
+  const master = oc.createDynamicsCompressor(); master.threshold.value = -14; master.ratio.value = 4; master.connect(oc.destination);
+  const voice = oc.createGain(); voice.connect(master);
+  p.audio.forEach(a => { const s = oc.createBufferSource(); s.buffer = a.c.audio; const g = oc.createGain(); const L = a.t1 - a.t0, k = a.c.gain || 1;
+    g.gain.setValueAtTime(0, a.t0); g.gain.linearRampToValueAtTime(k, a.t0 + 0.012); g.gain.setValueAtTime(k, a.t1 - 0.015); g.gain.linearRampToValueAtTime(0, a.t1);
+    s.connect(g); g.connect(voice); s.start(a.t0, a.src0, L); });
+  const mus = oc.createGain(), hasVoice = p.voiced.length > 0, hi = hasVoice ? 0.32 : 0.6, lo = 0.09;
+  mus.gain.setValueAtTime(hasVoice ? lo : hi, 0);
+  if (hasVoice) { // tự hạ nhạc khi có giọng
+    const vs = []; p.voiced.forEach(v => { const l = vs[vs.length - 1]; if (l && v[0] - l[1] < 0.6) l[1] = v[1]; else vs.push([...v]); });
+    let lastUp = 0; vs.forEach(v => { if (v[0] - lastUp > 0.8) { mus.gain.setTargetAtTime(hi, lastUp + 0.1, 0.12); mus.gain.setTargetAtTime(lo, v[0] - 0.15, 0.05); } lastUp = v[1]; });
+    mus.gain.setTargetAtTime(hi, lastUp + 0.1, 0.15);
+  }
+  mus.gain.setTargetAtTime(0.0001, p.dur - 0.7, 0.2);
+  mus.connect(master);
+  if (S.music) { const s = oc.createBufferSource(); s.buffer = S.music.buf; s.loop = true; const g = oc.createGain(); g.gain.value = 0.8; s.connect(g); g.connect(mus); s.start(0); }
+  else beat(oc, mus, p.bpm, p.dur + 0.2, p.key);
+  const fx = oc.createGain(); fx.gain.value = 0.9; fx.connect(master);
+  p.sfx.forEach(e => sfx(oc, fx, e.type, e.t));
+  return oc.startRendering();
+}
+
+/* ===================== KHUNG HÌNH: vẽ video lên canvas ===================== */
+const FONT = '"Be Vietnam Pro", system-ui, sans-serif';
+function wrap(g, text, maxW) { const ws = text.split(' '), lines = []; let cur = ''; ws.forEach(w => { const t = cur ? cur + ' ' + w : w; if (g.measureText(t).width > maxW && cur) { lines.push(cur); cur = w; } else cur = t; }); if (cur) lines.push(cur); return lines; }
+function rrect(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+const easeBack = x => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+
+const Player = {
+  cv: null, g: null, plan: null, mix: null, pool: {}, playing: false, t: 0, src: null, t0c: 0, t0: 0, extraDest: null, onEnd: null, last: null,
+  init(cv) { this.cv = cv; this.g = cv.getContext('2d'); this.base = document.createElement('canvas'); this.base.width = W; this.base.height = H; this.bg = this.base.getContext('2d'); this.bg.fillStyle = '#000'; this.bg.fillRect(0, 0, W, H); this.g.drawImage(this.base, 0, 0); },
+  el(c, slot) {
+    const k = c.id + ':' + slot;
+    if (!this.pool[k]) { const v = document.createElement('video'); v.muted = true; v.playsInline = true; v.preload = 'auto'; v.src = c.url; v.crossOrigin = 'anonymous'; this.pool[k] = v; }
+    return this.pool[k];
+  },
+  async load(p) {
+    this.pause(); this.plan = p; this.mix = null; this.t = 0;
+    const cnt = {}; p.shots.forEach(s => { if (s.c && s.c.hasVideo) { cnt[s.c.id] = (cnt[s.c.id] || 0) + 1; s.slot = cnt[s.c.id] % 2; s.v = this.el(s.c, s.slot); } else s.v = null; });
+    await document.fonts.load('900 60px "Be Vietnam Pro"').catch(() => {});
+    await this.seek(0);
+    $('#playBtn').disabled = true; $('#tm').textContent = 'Đang trộn âm thanh…';
+    this.mix = await renderMix(p); if (this.plan !== p) return;
+    $('#playBtn').disabled = false; this.tick();
+  },
+  shotAt(t) { const sh = this.plan.shots; for (let i = 0; i < sh.length; i++) if (t < sh[i].t1 || i === sh.length - 1) return i; return 0; },
+  srcT(s, t) { return s.freeze ? s.src0 : clamp(s.src0 + (t - s.t0), 0, s.c.dur - 0.04); },
+  async seek(t) {
+    const wasPlaying = this.playing; this.pause(); this.t = clamp(t, 0, this.plan.dur);
+    const s = this.plan.shots[this.shotAt(this.t)];
+    if (s.v) { const want = this.srcT(s, this.t); if (Math.abs(s.v.currentTime - want) > 0.02 || s.v.readyState < 2) { s.v.currentTime = want; await Promise.race([once(s.v, 'seeked'), sleep(1200)]).catch(() => {}); } }
+    this.draw(this.t); this.tick();
+    if (wasPlaying) this.play();
+  },
+  redraw() { if (this.plan) this.draw(this.t); },
+  toggle() { this.playing ? this.pause() : this.play(); },
+  play(fromStart) {
+    if (!this.mix) return; const ac = actx(); ac.resume();
+    if (fromStart || this.t >= this.plan.dur - 0.05) this.t = 0;
+    const src = ac.createBufferSource(); src.buffer = this.mix; src.connect(ac.destination); if (this.extraDest) src.connect(this.extraDest);
+    this.t0c = ac.currentTime + 0.08; this.t0 = this.t; src.start(this.t0c, this.t); this.src = src; this.playing = true; $('#playBtn').textContent = '⏸';
+    const loop = () => { if (!this.playing) return; const t = this.t0 + (ac.currentTime - this.t0c); if (t >= this.plan.dur) { this.t = this.plan.dur; this.draw(this.t - 0.001); this.pause(); this.onEnd && this.onEnd(); return; } this.t = Math.max(this.t0, t); this.sync(this.t); this.draw(this.t); this.tick(); requestAnimationFrame(loop); };
+    this.sync(this.t, true); requestAnimationFrame(loop);
+  },
+  pause() { if (this.src) { try { this.src.stop(); } catch (e) {} this.src.disconnect(); this.src = null; } this.playing = false; Object.values(this.pool).forEach(v => v.pause()); const b = $('#playBtn'); if (b) b.textContent = '▶'; },
+  sync(t, hard) {   // giữ video khớp thời gian + nạp trước cảnh kế tiếp
+    const sh = this.plan.shots, i = this.shotAt(t), s = sh[i], keep = new Set();
+    if (s.v) { keep.add(s.v); const want = this.srcT(s, t);
+      if (s.freeze) { if (!s.v.paused) s.v.pause(); if (Math.abs(s.v.currentTime - want) > 0.1) s.v.currentTime = want; }
+      else { if (s.v.paused || hard) { if (Math.abs(s.v.currentTime - want) > 0.08) s.v.currentTime = want; s.v.play().catch(() => {}); } else if (Math.abs(s.v.currentTime - want) > 0.3) s.v.currentTime = want; } }
+    for (let j = i + 1; j < Math.min(sh.length, i + 3); j++) { const n = sh[j]; if (!n.v || n.v === s.v || n.t0 - t > 1.2) continue; keep.add(n.v); if (n.v._prep !== n) { n.v._prep = n; n.v.pause(); n.v.currentTime = n.src0; } }
+    Object.values(this.pool).forEach(v => { if (!keep.has(v) && !v.paused) v.pause(); });
+  },
+  tick() { const p = this.plan; if (!p) return; $('#tm').textContent = fmt(this.t) + ' / ' + fmt(p.dur); const ph = $('#phd'); if (ph) ph.style.left = (this.t / p.dur * 100) + '%'; },
+  draw(t) {
+    const g = this.g, p = this.plan, st = p.style; if (!p) return;
+    const i = this.shotAt(t), s = p.shots[i], prog = (t - s.t0) / Math.max(0.01, s.t1 - s.t0);
+    // hiệu ứng chuyển cảnh quanh điểm cắt
+    let zx = 1, blur = 0, flash = 0, sx = 0, sy = 0;
+    p.trans.forEach(tr => { const d = t - tr.t;
+      if (tr.type === 'flash' && d >= 0 && d < 0.22) { flash = Math.max(flash, (1 - d / 0.22) * 0.8); const k = (1 - d / 0.22) * 22; sx = Math.sin(t * 90) * k; sy = Math.cos(t * 70) * k; }
+      if (tr.type === 'zoom' && Math.abs(d) < 0.25) { const k = 1 - Math.abs(d) / 0.25; zx = 1 + k * 0.28; blur = k * 8; }
+      if (tr.type === 'punch' && d >= 0 && d < 0.12) zx = Math.max(zx, 1 + (1 - d / 0.12) * 0.05);
+    });
+    const ready = s.v && s.v.readyState >= 2;
+    if (!(s.v && !ready)) {   // khung chưa sẵn sàng → giữ khung trước (không đè chữ lên chữ)
+      const g0 = g; { const g = this.bg; g.save(); g.filter = (p.grade || 'none') + (blur > 0.3 ? ` blur(${blur.toFixed(1)}px)` : '');
+      if (ready) {
+        const v = s.v, vw = v.videoWidth, vh = v.videoHeight, z = (s.z0 + (s.z1 - s.z0) * prog) * zx;
+        const sc = Math.max(W / vw, H / vh) * z, dw = vw * sc, dh = vh * sc;
+        const ay = s.kind === 'talk' ? 0.42 : 0.5;
+        let x = (W - dw) / 2 + (s.px || 0) * W * (prog - 0.5) + sx, y = H * ay - dh * ay + (s.py || 0) * H * (prog - 0.5) + sy;
+        x = clamp(x, W - dw, 0); y = clamp(y, H - dh, 0);
+        g.drawImage(v, x, y, dw, dh);
+      } else { const gr = g.createLinearGradient(0, 0, W, H); gr.addColorStop(0, '#0f3d2a'); gr.addColorStop(1, '#101418'); g.fillStyle = gr; g.fillRect(0, 0, W, H); }
+      g.restore(); }
+    }
+    g.drawImage(this.base, 0, 0);
+    if (st.key === 'C') { const vg = g.createRadialGradient(W / 2, H / 2, H * 0.3, W / 2, H / 2, H * 0.75); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.45)'); g.fillStyle = vg; g.fillRect(0, 0, W, H); }
+    // bóng tối nhẹ sau phụ đề để chữ dễ đọc
+    const sh = g.createLinearGradient(0, H * 0.55, 0, H * 0.82); sh.addColorStop(0, 'rgba(0,0,0,0)'); sh.addColorStop(0.5, 'rgba(0,0,0,.22)'); sh.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = sh; g.fillRect(0, H * 0.55, W, H * 0.27);
+    this.overlays(t);
+    if (flash > 0) { g.fillStyle = `rgba(255,255,255,${flash})`; g.fillRect(0, 0, W, H); }
+    if (t < 0.18) { g.fillStyle = `rgba(0,0,0,${1 - t / 0.18})`; g.fillRect(0, 0, W, H); }
+  },
+  overlays(t) {
+    const g = this.g, p = this.plan; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineJoin = 'round';
+    // thanh tiến độ + nhãn thương hiệu
+    if (S.opt.bar) { g.fillStyle = 'rgba(255,255,255,.25)'; g.fillRect(0, 0, W, 10); g.fillStyle = '#1fa463'; g.fillRect(0, 0, W * t / p.dur, 10); }
+    if (S.opt.brand) { g.font = `800 30px ${FONT}`; const tw = g.measureText(S.opt.brand).width + 44; g.fillStyle = 'rgba(0,0,0,.45)'; rrect(g, 60, 190, tw, 54, 27); g.fill(); g.fillStyle = '#1fa463'; g.beginPath(); g.arc(84, 217, 7, 0, 7); g.fill(); g.fillStyle = '#fff'; g.textAlign = 'left'; g.fillText(S.opt.brand, 100, 218); g.textAlign = 'center'; }
+    // HOOK
+    const hk = p.hook; if (hk && t >= hk.t0 && t < hk.t1) {
+      const a = clamp((t - hk.t0) / 0.28, 0, 1), out = clamp((hk.t1 - t) / 0.2, 0, 1), k = easeBack(a);
+      g.save(); g.translate(W / 2, 420); g.rotate(-0.035); g.scale(k, k); g.globalAlpha = out;
+      let fs = 84, ls; do { g.font = `900 ${fs}px ${FONT}`; ls = wrap(g, hk.text, 840); fs -= 6; } while (ls.length > 3 && fs > 50);
+      const lh = fs * 1.3;
+      ls.forEach((l, j) => { const y = (j - (ls.length - 1) / 2) * lh, w = g.measureText(l).width + 50; g.fillStyle = j % 2 ? '#fff' : '#ffe14d'; rrect(g, -w / 2, y - lh * 0.47, w, lh * 0.94, 18); g.fill(); g.fillStyle = '#111'; g.fillText(l, 0, y + 3); });
+      g.restore();
+    }
+    // CALLOUT
+    p.callouts.forEach(c => { if (t < c.t0 || t >= c.t1) return; const a = clamp((t - c.t0) / 0.22, 0, 1), out = clamp((c.t1 - t) / 0.15, 0, 1);
+      g.save(); g.translate(W / 2 - 40, 640); g.rotate(c.rot * Math.PI / 180); const k = easeBack(a); g.scale(k, k); g.globalAlpha = out;
+      g.font = `900 104px ${FONT}`; const w = g.measureText(c.text).width + 70;
+      g.fillStyle = 'rgba(0,0,0,.35)'; rrect(g, -w / 2 + 10, -66 + 12, w, 132, 28); g.fill();
+      g.fillStyle = '#1fa463'; rrect(g, -w / 2, -66, w, 132, 28); g.fill(); g.fillStyle = '#fff'; g.fillText(c.text, 0, 4); g.restore(); });
+    // PHỤ ĐỀ
+    const line = p.caps.find(c => t >= c.t0 && t < c.t1);
+    if (line && !(p.cta && t >= p.cta.t0 + 0.6 && p.capStyle === 'box' && false)) this.caption(line, t, p.capStyle);
+    // CTA
+    const ct = p.cta; if (ct && t >= ct.t0) {
+      const a = clamp((t - ct.t0) / 0.35, 0, 1), k = easeBack(a), pulse = 1 + Math.sin((t - ct.t0) * 7) * 0.02;
+      g.save(); g.translate(W / 2 - 30, 1060 + (1 - a) * 120); g.globalAlpha = a; g.scale(pulse, pulse);
+      g.font = `800 52px ${FONT}`; const ls = wrap(g, ct.text, 640).slice(0, 3), hh = ls.length * 66 + 70, ww = 880;
+      g.fillStyle = 'rgba(0,0,0,.35)'; rrect(g, -ww / 2 + 8, -hh / 2 + 12, ww, hh, 36); g.fill();
+      g.fillStyle = '#fff'; rrect(g, -ww / 2, -hh / 2, ww, hh, 36); g.fill();
+      g.fillStyle = '#111'; g.textAlign = 'left'; ls.forEach((l, j) => g.fillText(l, -ww / 2 + 48, (j - (ls.length - 1) / 2) * 66 + 3));
+      g.fillStyle = '#1fa463'; g.beginPath(); g.arc(ww / 2 - 90, 0, 58 * k, 0, 7); g.fill(); g.fillStyle = '#fff'; g.font = `900 64px ${FONT}`; g.textAlign = 'center'; g.fillText('→', ww / 2 - 90 + Math.sin((t - ct.t0) * 6) * 6, 2);
+      g.restore();
+    }
+  },
+  caption(line, t, style) {
+    const g = this.g, cx = W / 2 - 30, cy = 1330, a = clamp((t - line.t0) / 0.12, 0, 1);
+    if (style === 'box') {
+      g.font = `800 58px ${FONT}`; const ls = wrap(g, line.text, 800);
+      ls.forEach((l, j) => { const y = cy + (j - (ls.length - 1) / 2) * 84, w = g.measureText(l).width + 44; g.fillStyle = 'rgba(0,0,0,.78)'; rrect(g, cx - w / 2, y - 40, w, 80, 16); g.fill(); g.fillStyle = '#fff'; g.fillText(l, cx, y + 2); });
+      return;
+    }
+    const size = style === 'pop' ? 76 : 62; g.font = `900 ${size}px ${FONT}`;
+    const words = line.words.map(w => ({ ...w, txt: style === 'pop' ? w.w.toUpperCase() : w.w }));
+    // xếp dòng
+    const space = g.measureText(' ').width, rows = []; let row = [], rw = 0;
+    words.forEach(w => { const ww = g.measureText(w.txt).width; if (rw + ww > 820 && row.length) { rows.push({ row, rw }); row = []; rw = 0; } row.push({ ...w, ww }); rw += ww + space; });
+    if (row.length) rows.push({ row, rw });
+    const lh = size * 1.25, k = style === 'pop' ? 0.85 + 0.15 * easeBack(a) : 1;
+    g.save(); g.translate(cx, cy); g.scale(k, k);
+    rows.forEach((r, j) => {
+      let x = -(r.rw - space) / 2; const y = (j - (rows.length - 1) / 2) * lh;
+      r.row.forEach(w => {
+        const on = t >= w.t0 && t < w.t1 + 0.05, done = t >= w.t1;
+        const col = style === 'pop' ? (on ? '#ffe14d' : '#fff') : (done || on ? '#ffe14d' : '#fff');
+        const sc = style === 'pop' && on ? 1.12 : 1;
+        g.save(); g.translate(x + w.ww / 2, y); g.scale(sc, sc); g.textAlign = 'center';
+        g.lineWidth = 14; g.strokeStyle = 'rgba(0,0,0,.9)'; g.strokeText(w.txt, 0, 2); g.fillStyle = col; g.fillText(w.txt, 0, 2); g.restore();
+        x += w.ww + space;
+      });
+    });
+    g.restore();
+  },
+};
+
+/* ===================== XUẤT VIDEO ===================== */
+function pickMime() {
+  const c = ['video/mp4;codecs=avc1.640028,mp4a.40.2', 'video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4;codecs=avc1,mp4a', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm', 'video/mp4'];
+  return c.find(m => window.MediaRecorder && MediaRecorder.isTypeSupported(m)) || '';
+}
+async function exportVideo() {
+  const p = Player.plan; if (!p || !Player.mix) return;
+  const mime = pickMime(); if (!mime) return toast('Trình duyệt này không hỗ trợ xuất video. Hãy dùng Chrome trên máy tính.', true);
+  const ov = document.createElement('div'); ov.className = 'ov';
+  ov.innerHTML = `<div class="box"><h3 style="margin:0 0 6px">⬇️ Đang xuất video…</h3><p class="sub">Web quay lại đúng những gì bạn thấy, mất khoảng ${Math.ceil(p.dur)} giây. <b>Giữ nguyên tab này đang mở</b> (không chuyển tab, không thu nhỏ).</p><div class="bar" style="height:8px"><i id="exP"></i></div><p class="sub" id="exT" style="margin-top:6px">0%</p><button class="btn ghost" id="exX">Huỷ</button></div>`;
+  document.body.appendChild(ov);
+  let cancelled = false;
+  const ac = actx(); await ac.resume();
+  const dest = ac.createMediaStreamDestination(); Player.extraDest = dest;
+  const stream = Player.cv.captureStream(FPS); dest.stream.getAudioTracks().forEach(tr => stream.addTrack(tr));
+  const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 10e6, audioBitsPerSecond: 192000 }); const chunks = [];
+  rec.ondataavailable = e => e.data.size && chunks.push(e.data);
+  const done = new Promise(r => rec.onstop = r);
+  await Player.seek(0); await sleep(250);
+  // nạp sẵn cảnh đầu
+  rec.start(500);
+  const iv = setInterval(() => { const k = Player.t / p.dur; $('#exP').style.width = (k * 100).toFixed(1) + '%'; $('#exT').textContent = Math.round(k * 100) + '%'; }, 200);
+  $('#exX').onclick = () => { cancelled = true; Player.pause(); rec.state !== 'inactive' && rec.stop(); };
+  await new Promise(r => { Player.onEnd = r; Player.play(true); const chk = setInterval(() => { if (cancelled) { clearInterval(chk); r(); } }, 200); });
+  Player.onEnd = null; await sleep(300); if (rec.state !== 'inactive') rec.stop(); await done; clearInterval(iv); Player.extraDest = null; ov.remove();
+  if (cancelled) return toast('Đã huỷ xuất video.');
+  const ext = mime.includes('mp4') ? 'mp4' : 'webm', blob = new Blob(chunks, { type: mime.split(';')[0] });
+  const name = 'video-' + p.key + '-' + new Date().toISOString().slice(0, 16).replace(/[-:T]/g, '') + '.' + ext;
+  const url = URL.createObjectURL(blob), a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  toast(`✅ Đã xuất <b>${esc(name)}</b> (${(blob.size / 1048576).toFixed(1)} MB).` + (ext === 'webm' ? '<br>Trình duyệt chỉ xuất được WebM – TikTok vẫn nhận, hoặc mở Chrome mới nhất để có MP4.' : ''), false, 8000);
+  window.__lastExport = { name, size: blob.size, mime, url };
+  if (S.api && S.token) call('videoLog', { title: p.hook ? p.hook.text : '', variant: p.key + '. ' + p.style.name, duration: Math.round(p.dur * 10) / 10, score: p.score.score, note: S.clips.length + ' clip' }).catch(() => {});
+}
+
+window.__VS = { S, Player, buildPlan, evaluate, direct, alignScript, addFiles, mkSent, exportVideo };
+boot();
+</script>
+</body>
+</html>
