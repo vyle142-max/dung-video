@@ -84,7 +84,7 @@ details.book summary{cursor:pointer;font-weight:700}details.book ol{padding-left
 <div id="app"></div>
 <script type="module">
 /* ===================== DỰNG VIDEO – OPPO MIỀN ĐÔNG (Đợt 1) ===================== */
-const VERSION = '2026.11.14-2300';
+const VERSION = '2026.11.14-2345';
 const W = 1080, H = 1920, FPS = 30;
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -462,7 +462,8 @@ function drawSlots() {
     if (faces.length && /HOOK|CTA|MỞ ĐẦU/.test(x.part)) { S.slots[i] = 'face'; return; }
     while (k < br.length && used.has(br[k].id)) k++; if (k < br.length) { S.slots[i] = br[k].id; used.add(br[k].id); k++; }
   });
-  el.innerHTML = (vc ? `<p class="sub">🎙️ Giọng lời thoại: <b>${esc(vc.name)}</b> – web đã chia giọng theo từng phần (bấm ▶ để nghe kiểm tra).</p>` : '<p class="sub">⚠️ Chưa có giọng thu / clip có giọng nói. Bấm <b>🎙️ Thu giọng</b> và đọc liền cả kịch bản.</p>')
+  const silentVo = S.clips.find(c => c.kind === 'vo' && !c.st && c.audio && !(c.voiced || []).length);
+  el.innerHTML = (silentVo && (!vc || vc.kind !== 'vo') ? `<p class="sub" style="color:var(--bad)">⚠️ File <b>${esc(silentVo.name)}</b> không có tiếng nói (micro không thu được). Thu lại – lúc thu thanh xanh phải nhảy khi bạn nói – hoặc ghi âm bằng điện thoại rồi kéo file vào ô Nguyên liệu.</p>` : '') + (vc ? `<p class="sub">🎙️ Giọng lời thoại: <b>${esc(vc.name)}</b> – web đã chia giọng theo từng phần (bấm ▶ để nghe kiểm tra).</p>` : '<p class="sub">⚠️ Chưa có giọng thu / clip có giọng nói. Bấm <b>🎙️ Thu giọng</b> và đọc liền cả kịch bản.</p>')
     + P.sections.map((x, i) => { const sp = vc && vc.sents[i] && vc.sents[i].sec === i ? vc.sents[i] : null;
       return `<div class="slot ${S.slots[i] ? 'ok' : ''}"><span class="sn">${i + 1}</span><div style="flex:1;min-width:0"><div class="st2"><b>${esc(x.part)}</b> · ${esc(x.say)}</div>
       ${sp ? `<div class="sub" style="margin:2px 0 0">🎙️ ${fmt(sp.t0)}–${fmt(sp.t1)} (${(sp.t1 - sp.t0).toFixed(1)}s) <a href="#" data-play="${i}" style="color:#7ec3ff">▶ nghe</a></div>` : ''}
@@ -655,7 +656,7 @@ function audioStats(c) {
   c.env = env;
   const noise = Math.max(pct(env, 0.15), 1e-4), peak = pct(env, 0.95);
   c.dyn = peak / noise;
-  const thr = Math.max(noise * 2.2, noise + (peak - noise) * 0.16);
+  const thr = Math.max(noise * 2.0, noise + (peak - noise) * 0.14);
   const on = Array.from(env, x => x > thr);
   const segs = []; let s0 = -1, gap = 0;
   for (let i = 0; i <= n; i++) {
@@ -692,11 +693,12 @@ function drawClips() {
   el.innerHTML = S.clips.map(c => `<div class="clip" data-id="${c.id}">
     ${c.thumb ? `<img src="${c.thumb}">` : `<div class="ph">${c.kind === 'vo' ? '🎙️' : '🎞️'}</div>`}
     <div class="meta"><div class="nm" title="${esc(c.name)}">${esc(c.name)}</div>
-      <div class="st">${c.st ? esc(c.st) : `${fmt(c.dur)} · ${c.audio ? (c.voiced.length ? 'có giọng ' + Math.round(c.voicedRatio * 100) + '%' : 'âm thanh nền') : 'không tiếng'}${c.sents.length ? ' · ' + c.sents.length + ' câu' : ''}`}</div>
+      <div class="st">${c.st ? esc(c.st) : `${fmt(c.dur)} · ${c.audio ? (c.voiced.length ? 'có giọng ' + Math.round(c.voicedRatio * 100) + '%' : (c.kind === 'vo' ? '<b style="color:var(--bad)">⚠️ không nghe thấy giọng</b>' : 'âm thanh nền')) : 'không tiếng'}${c.sents.length ? ' · ' + c.sents.length + ' câu' : ''}`}${c.audio && !c.hasVideo ? ` <a href="#" data-pl="${c.id}" style="color:#7ec3ff">▶ nghe</a>` : ''}</div>
       ${c.st && !c.bad ? `<div class="bar"><i style="width:${Math.round(c.prog * 100)}%"></i></div>` : ''}</div>
     ${c.kind ? `<select data-k="${c.id}">${Object.entries(KIND).filter(([k]) => c.hasVideo ? k !== 'vo' : k === 'vo' || k === 'skip').map(([k, n]) => `<option value="${k}" ${c.kind === k ? 'selected' : ''}>${n}</option>`).join('')}</select>` : ''}
     <button class="x" data-del="${c.id}" title="Xoá">✕</button></div>`).join('');
   el.querySelectorAll('select[data-k]').forEach(s => s.onchange = () => { S.clips.find(c => c.id == s.dataset.k).kind = s.value; drawSents(); refreshButtons(); drawSlots(); });
+  el.querySelectorAll('[data-pl]').forEach(a => a.onclick = e => { e.preventDefault(); const c = S.clips.find(x => x.id == a.dataset.pl); playSpan(c, 0, Math.min(c.dur, 8)); });
   el.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { S.clips = S.clips.filter(c => c.id != b.dataset.del); drawClips(); drawSents(); refreshButtons(); drawSlots(); });
 }
 function drawClipProg(c) { const i = document.querySelector(`.clip[data-id="${c.id}"] .bar i`); if (i) i.style.width = Math.round(c.prog * 100) + '%'; }
@@ -714,21 +716,43 @@ async function setMusic(f) {
 
 /* ---------- Thu giọng (có teleprompter) ---------- */
 async function recordVoice() {
-  let stream; try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); } catch (e) { return toast('Không mở được micro: ' + esc(e.message), true); }
+  let stream = null, devId = load('vs_mic');
   const ov = document.createElement('div'); ov.className = 'ov';
   ov.innerHTML = `<div class="box"><h3 style="margin:0 0 6px">🎙️ Thu giọng lời thoại</h3><p class="sub">Giọng này sẽ làm lời thoại cho cả video, web tự chia theo từng phần kịch bản.</p>
-    <div class="prompt" id="rcP" style="font-size:24px;max-height:46vh">${S.plan.sections.length ? S.plan.sections.map(x => `<p style="margin:0 0 16px"><small style="display:block;font-size:12px;color:var(--brand)">${esc(x.part)}</small>${esc(x.say)}</p>`).join('') + '<p style="height:30vh"></p>' : esc(S.opt.script || 'Chưa có kịch bản – cứ nói tự nhiên. Mẹo: câu đầu là câu gây tò mò nhất!').replace(/\n/g, '<br>')}</div>
+    <div class="row2" style="align-items:center"><select class="inp" id="rcDev"></select><div><div class="lbl" style="margin:0">Micro đang nghe:</div><div class="bar" style="height:10px"><i id="rcLv" style="background:var(--good)"></i></div></div></div>
+    <p class="sub" id="rcHint" style="margin-top:6px">Nói thử “alo alo” – thanh xanh phải nhảy lên. Không nhảy thì đổi micro ở ô bên trái.</p>
+    <div class="prompt" id="rcP" style="font-size:24px;max-height:42vh">${S.plan.sections.length ? S.plan.sections.map(x => `<p style="margin:0 0 16px"><small style="display:block;font-size:12px;color:var(--brand)">${esc(x.part)}</small>${esc(x.say)}</p>`).join('') + '<p style="height:30vh"></p>' : esc(S.opt.script || 'Chưa có kịch bản – cứ nói tự nhiên. Mẹo: câu đầu là câu gây tò mò nhất!').replace(/\n/g, '<br>')}</div>
     <p class="sub">Đọc liền một mạch, <b>ngừng khoảng 1 giây giữa các phần</b> để web chia giọng chính xác. <label>Tốc độ chữ chạy <input type="range" id="rcS" min="0" max="80" value="30"></label></p>
     <div style="display:flex;gap:8px;align-items:center"><button class="btn rec" id="rcGo">⏺ Bắt đầu</button><span id="rcT" class="tm">0:00.0</span><span class="sp" style="flex:1"></span><button class="btn ghost" id="rcX">Huỷ</button></div></div>`;
   document.body.appendChild(ov);
-  let rec = null, chunks = [], t0 = 0, tm = null;
-  const end = () => { stream.getTracks().forEach(t => t.stop()); clearInterval(tm); ov.remove(); };
-  $('#rcX').onclick = () => { if (rec && rec.state !== 'inactive') rec.onstop = null, rec.stop(); end(); };
+  let rec = null, chunks = [], t0 = 0, tm = null, an = null, src = null, maxLv = 0, live = true;
+  const meter = () => { if (!live || !ov.isConnected) return; if (an) { const d = new Float32Array(an.fftSize); an.getFloatTimeDomainData(d); let m = 0; for (const x of d) m = Math.max(m, Math.abs(x)); maxLv = Math.max(maxLv, rec ? m : 0); const el = $('#rcLv'); if (el) { el.style.width = Math.min(100, m * 260) + '%'; el.style.background = m < 0.02 ? 'var(--bad)' : 'var(--good)'; } } requestAnimationFrame(meter); };
+  const open = async id => {
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: { deviceId: id ? { exact: id } : undefined, echoCancellation: true, noiseSuppression: false, autoGainControl: true } }); }
+    catch (e) { $('#rcHint').innerHTML = '<span style="color:var(--bad)">Không mở được micro: ' + esc(e.message) + '. Bấm ổ khoá cạnh thanh địa chỉ → Micro → Cho phép.</span>'; return; }
+    const ac = actx(); ac.resume(); if (src) src.disconnect(); src = ac.createMediaStreamSource(stream); an = ac.createAnalyser(); an.fftSize = 1024; src.connect(an);
+    const devs = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'audioinput');
+    const cur = stream.getAudioTracks()[0].getSettings().deviceId;
+    $('#rcDev').innerHTML = devs.map((d, i) => `<option value="${esc(d.deviceId)}" ${d.deviceId === cur ? 'selected' : ''}>🎤 ${esc(d.label || 'Micro ' + (i + 1))}</option>`).join('');
+  };
+  await open(devId); requestAnimationFrame(meter);
+  $('#rcDev').onchange = e => { store('vs_mic', e.target.value); open(e.target.value); };
+  const end = () => { live = false; if (stream) stream.getTracks().forEach(t => t.stop()); if (src) src.disconnect(); clearInterval(tm); ov.remove(); };
+  $('#rcX').onclick = () => { if (rec && rec.state !== 'inactive') { rec.onstop = null; rec.stop(); } end(); };
   $('#rcGo').onclick = () => {
+    if (!stream) return;
     if (!rec) {
       rec = new MediaRecorder(stream); rec.ondataavailable = e => e.data.size && chunks.push(e.data);
-      rec.onstop = () => { end(); const f = new File(chunks, 'giong-thu-' + new Date().toTimeString().slice(0, 8).replace(/:/g, '') + '.webm', { type: chunks[0]?.type || 'audio/webm' }); addFiles([f]); };
-      rec.start(); t0 = performance.now(); $('#rcGo').textContent = '⏹ Dừng & dùng'; let lt = 0; const sc = ts => { if (!ov.isConnected) return; if (lt) $('#rcP').scrollTop += (ts - lt) / 1000 * +$('#rcS').value; lt = ts; requestAnimationFrame(sc); }; requestAnimationFrame(sc); tm = setInterval(() => $('#rcT').textContent = fmt((performance.now() - t0) / 1000), 100);
+      rec.onstop = () => {
+        const quiet = maxLv < 0.03; end();
+        if (quiet) { toast('⚠️ Bản thu gần như <b>không có tiếng</b> – micro không nghe được giọng. Thu lại và chọn đúng micro (thanh xanh phải nhảy khi nói), hoặc ghi âm bằng điện thoại rồi kéo file vào ô Nguyên liệu.', true, 12000); return; }
+        const f = new File(chunks, 'giong-thu-' + new Date().toTimeString().slice(0, 8).replace(/:/g, '') + '.webm', { type: chunks[0]?.type || 'audio/webm' });
+        S.clips.filter(c => c.kind === 'vo').forEach(c => c.kind = 'skip'); addFiles([f]);
+      };
+      rec.start(); t0 = performance.now(); $('#rcGo').textContent = '⏹ Dừng & dùng'; $('#rcDev').disabled = true;
+      let lt = 0; const sc = ts => { if (!ov.isConnected) return; if (lt) $('#rcP').scrollTop += (ts - lt) / 1000 * +$('#rcS').value; lt = ts; requestAnimationFrame(sc); }; requestAnimationFrame(sc);
+      tm = setInterval(() => $('#rcT').textContent = fmt((performance.now() - t0) / 1000), 100);
     } else rec.stop();
   };
 }
