@@ -68,7 +68,7 @@ details.book summary{cursor:pointer;font-weight:700}details.book ol{padding-left
 <div id="app"></div>
 <script type="module">
 /* ===================== DỰNG VIDEO – OPPO MIỀN ĐÔNG (Đợt 1) ===================== */
-const VERSION = '2026.11.14-1500';
+const VERSION = '2026.11.14-1545';
 const W = 1080, H = 1920, FPS = 30;
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -117,8 +117,9 @@ let nextId = 1;
 /* ---------- Kết nối web nhân sự ---------- */
 async function call(action, payload) {
   if (!S.api) throw new Error('Chưa có địa chỉ web nhân sự.');
-  const r = await fetch(S.api, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action, token: S.token, payload: payload || {} }) });
-  const j = await r.json();
+  let r; try { r = await fetch(S.api, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action, token: S.token, payload: payload || {} }) }); }
+  catch (e) { const er = new Error('Không kết nối được web nhân sự. Bấm "Đổi link web nhân sự" bên dưới và dán link web nhân sự (copy trên thanh địa chỉ, dạng …/exec). Nếu vẫn lỗi: web nhân sự cần Deploy bản mới, quyền truy cập "Anyone".'); er.net = true; throw er; }
+  let j; try { j = await r.json(); } catch (e) { const er = new Error('Link web nhân sự không đúng hoặc chưa Deploy bản mới (mã ' + r.status + ').'); er.net = true; throw er; }
   if (!j.ok) throw new Error(j.error || 'Lỗi máy chủ');
   return j.data;
 }
@@ -132,23 +133,24 @@ async function boot() {
   S.api = load('vs_api'); S.token = load('vs_tok');
   const local = /^(localhost|127\.0\.0\.1|)$/.test(location.hostname);
   if (local && h.has('dev')) { S.me = { name: 'Thử nghiệm', role: 'dev', appTitle: 'OPPO MIỀN ĐÔNG' }; return app(); }
-  if (S.api && S.token) { try { S.me = await call('videoMe'); return app(); } catch (e) { store('vs_tok', null); S.token = ''; loginView(e.message); return; } }
+  if (S.api && S.token) { try { S.me = await call('videoMe'); return app(); } catch (e) { if (!e.net) { store('vs_tok', null); S.token = ''; } loginView(e.message, e.net); return; } }
   loginView();
 }
-function loginView(err) {
+function loginView(err, showApi) {
   $('#app').innerHTML = `<div class="login"><h2 style="margin:0 0 4px;color:var(--brand)">🎬 Dựng video</h2>
   <p class="sub">Đăng nhập bằng tài khoản web nhân sự. Cách nhanh nhất: mở web nhân sự → trang <b>Dựng video</b> → bấm <b>Mở trình dựng video</b>.</p>
   ${err ? `<p class="pill b" style="display:block;border-radius:8px;padding:6px 10px;margin-bottom:10px">${esc(err)}</p>` : ''}
-  <label class="f ${S.api ? 'hidden' : ''}" id="apiBox"><span>Link web nhân sự (…/exec)</span><input class="inp" id="lgApi" value="${esc(S.api)}" placeholder="https://script.google.com/macros/s/…/exec"></label>
+  <label class="f ${S.api && !showApi ? 'hidden' : ''}" id="apiBox"><span>Link web nhân sự (…/exec)</span><input class="inp" id="lgApi" value="${esc(S.api)}" placeholder="https://script.google.com/macros/s/…/exec"></label>
   <label class="f"><span>Tài khoản</span><input class="inp" id="lgU" autocomplete="username"></label>
   <label class="f"><span>Mật khẩu</span><input class="inp" id="lgP" type="password" autocomplete="current-password"></label>
   <button class="btn pri" id="lgGo" style="width:100%;justify-content:center">Đăng nhập</button>
   ${S.api ? '<p class="sub" style="margin-top:10px"><a href="#" id="lgChg" style="color:var(--muted)">Đổi link web nhân sự</a></p>' : ''}</div>`;
   const go = async () => {
-    const api = $('#lgApi').value.trim(); if (api) { S.api = api; store('vs_api', api); }
+    const api = $('#lgApi').value.trim().replace(/[?#].*$/, ''); if (api) { S.api = api; store('vs_api', api); }
+    if (S.token && !$('#lgU').value.trim()) { try { S.me = await call('videoMe'); return app(); } catch (e) { if (!e.net) { store('vs_tok', null); S.token = ''; } return loginView(e.message, e.net); } }
     const b = $('#lgGo'); b.disabled = true; b.textContent = 'Đang đăng nhập…';
     try { const d = await call('login', { username: $('#lgU').value.trim(), password: $('#lgP').value }); S.token = d.token; store('vs_tok', d.token); S.me = await call('videoMe'); app(); }
-    catch (e) { loginView(e.message); }
+    catch (e) { loginView(e.message, e.net); }
   };
   $('#lgGo').onclick = go; $('#lgP').onkeydown = e => { if (e.key === 'Enter') go(); };
   const c = $('#lgChg'); if (c) c.onclick = e => { e.preventDefault(); $('#apiBox').classList.remove('hidden'); };
