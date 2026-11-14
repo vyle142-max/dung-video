@@ -84,7 +84,7 @@ details.book summary{cursor:pointer;font-weight:700}details.book ol{padding-left
 <div id="app"></div>
 <script type="module">
 /* ===================== DỰNG VIDEO – OPPO MIỀN ĐÔNG (Đợt 1) ===================== */
-const VERSION = '2026.11.14-1830';
+const VERSION = '2026.11.14-1900';
 const W = 1080, H = 1920, FPS = 30;
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -325,7 +325,7 @@ async function makeScript(again) {
     if (!o) o = genScript(P, rng(Date.now() % 1e6));
     Object.assign(P, { hooks: o.hooks, hookIdx: 0, sections: o.sections, by: o.by, formulaName: FORMULAS[o.formula] || o.formula || '' });
     P.hooks.forEach(h => h.score = clamp(Math.round(5 + hookScore(h.text, 0) * 1.1), 5, 10));
-    S.slots = {}; syncScriptToEditor(); drawPlan(); goStep(2);
+    S.slots = {}; S.slotsLocked = false; syncScriptToEditor(); drawPlan(); goStep(2);
   } catch (e) { console.error(e); toast('Lỗi khi lên kịch bản: ' + esc(e.message), true); }
   finally { clearInterval(iv); gemStatus = () => {}; b.disabled = false; b.textContent = '✨ Lên kịch bản'; }
 }
@@ -450,15 +450,33 @@ function musicFor(p) {
 /* ---------- Bước 3: gắn clip vào từng cảnh ---------- */
 function drawSlots() {
   const el = $('#slots'); if (!el) return; const P = S.plan;
-  const br = S.clips.filter(c => c.kind === 'broll' && !c.st);
+  const br = S.clips.filter(c => c.kind === 'broll' && !c.st).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
   if (!P.sections.length) { el.innerHTML = '<p class="sub">Chưa có kịch bản – web tự chọn cảnh. Muốn chèn đúng cảnh theo lời nói, hãy làm bước 1–2.</p>'; return; }
   // tự gắn clip chưa dùng vào ô trống theo thứ tự
   const used = new Set(Object.values(S.slots).map(Number)); let k = 0;
   P.sections.forEach((s, i) => { if (S.slots[i] && !br.some(c => c.id == S.slots[i])) delete S.slots[i]; if (!S.slots[i]) { while (k < br.length && used.has(br[k].id)) k++; if (k < br.length) { S.slots[i] = br[k].id; used.add(br[k].id); k++; } } });
   el.innerHTML = P.sections.map((s, i) => `<div class="slot ${S.slots[i] ? 'ok' : ''}"><span class="sn">${i + 1}</span><div style="flex:1;min-width:0"><div class="st2">${esc(s.part)} · ${esc(s.shot.title)}</div>
     <select data-slot="${i}"><option value="">${br.length ? '— Web tự chọn —' : '— Chưa có clip cảnh quay —'}</option>${br.map(c => `<option value="${c.id}" ${S.slots[i] == c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select></div></div>`).join('')
-    + `<p class="sub" style="margin-top:6px">${P.sections.filter((s, i) => !S.slots[i]).length ? '⚠️ Còn cảnh chưa có clip – web sẽ dùng cảnh khác thay.' : '✅ Đủ cảnh.'}</p>`;
-  el.querySelectorAll('[data-slot]').forEach(s => s.onchange = () => { if (s.value) S.slots[s.dataset.slot] = +s.value; else delete S.slots[s.dataset.slot]; drawSlots(); if (S.variants.length) direct(false); });
+    + `<p class="sub" style="margin-top:6px">${P.sections.filter((s, i) => !S.slots[i]).length ? '⚠️ Còn cảnh chưa có clip – phần đó sẽ quay mặt người nói.' : '✅ Đủ cảnh.'} Web tự xếp theo thứ tự tên file (thứ tự quay).</p>`
+    + (br.length ? `<button class="btn sm ${S.gemKey ? 'pri' : ''}" id="aiSlots" style="margin-top:4px">🤖 AI xem hình & xếp cảnh</button><span id="aiSlotsSt" class="sub" style="margin-left:6px"></span>` : '');
+  const ab = $('#aiSlots'); if (ab) ab.onclick = () => aiSlots(true);
+  el.querySelectorAll('[data-slot]').forEach(s => s.onchange = () => { S.slotsLocked = true; if (s.value) S.slots[s.dataset.slot] = +s.value; else delete S.slots[s.dataset.slot]; drawSlots(); if (S.variants.length) direct(false); });
+}
+
+async function aiSlots(manual) {
+  const P = S.plan, br = S.clips.filter(c => c.kind === 'broll' && !c.st && c.keys && c.keys.length);
+  if (!S.gemKey) { if (manual) toast('Cần key AI Gemini (bước 1) để AI xem hình và xếp cảnh.', true); return; }
+  if (!P.sections.length || !br.length) return;
+  const st = $('#aiSlotsSt'); if (st) st.textContent = '⏳ AI đang xem ' + br.length + ' clip…';
+  const parts = [{ text: `Kịch bản video có các cảnh cần quay:\n${P.sections.map((x, i) => `Cảnh ${i + 1} (${x.part}): ${x.shot.title} — lời nói: "${x.say}"`).join('\n')}\n\nDưới đây là ${br.length} clip đã quay, mỗi clip 3 khung hình. Hãy ghép mỗi cảnh với clip phù hợp nhất (mỗi clip chỉ dùng cho 1 cảnh; cảnh không có clip hợp thì bỏ trống). Trả JSON {"map":[{"canh":1,"clip":1}],"note":"1 câu tiếng Việt"}` }];
+  br.forEach((c, i) => { parts.push({ text: `Clip ${i + 1}: ${c.name} (${c.dur.toFixed(1)}s)` }); c.keys.forEach(k => parts.push({ inline_data: { mime_type: 'image/jpeg', data: k.split(',')[1] } })); });
+  try {
+    const o = await gemini(parts, 0.2); const map = Array.isArray(o) ? o : (o.map || []);
+    const ns = {}; map.forEach(x => { const k = +x.canh - 1, c = br[+x.clip - 1]; if (c && k >= 0 && k < P.sections.length && !Object.values(ns).includes(c.id)) ns[k] = c.id; });
+    if (!Object.keys(ns).length) throw new Error('AI không ghép được');
+    S.slots = ns; S.slotsLocked = true; drawSlots(); const st2 = $('#aiSlotsSt'); if (st2) st2.textContent = '✅ ' + (o.note || 'AI đã xếp cảnh.');
+    if (S.variants.length) direct(false);
+  } catch (e) { const st2 = $('#aiSlotsSt'); if (st2) st2.textContent = '⚠️ AI chưa xếp được: ' + String(e.message).slice(0, 80); }
 }
 
 /* ---------- Khung giao diện ---------- */
@@ -598,15 +616,18 @@ async function addFiles(files) {
     S.clips.push(c); drawClips();
     try { await analyzeClip(c); c.st = ''; } catch (e) { c.st = 'Lỗi: ' + e.message; c.bad = true; }
     drawClips(); refreshButtons(); drawSlots();
+    if (!S.clips.some(x => x.st && !x.bad) && S.gemKey && S.plan.sections.length && !S.slotsLocked && S.clips.filter(x => x.kind === 'broll').length > 1) aiSlots(false);
   }
 }
 async function analyzeClip(c) {
   const v = document.createElement('video'); v.muted = true; v.preload = 'auto'; v.playsInline = true; v.src = c.url;
   await once(v, 'loadedmetadata');
   c.dur = v.duration; c.w = v.videoWidth; c.h = v.videoHeight; c.hasVideo = c.w > 0 && /^video|\.(mp4|mov|webm|m4v|mkv)$/i.test(c.file.type || c.name);
-  if (!isFinite(c.dur)) { v.currentTime = 1e9; await once(v, 'seeked').catch(() => {}); c.dur = v.duration; v.currentTime = 0; }
+  if (!isFinite(c.dur)) { v.currentTime = 1e9; await Promise.race([once(v, 'seeked').catch(() => {}), sleep(2500)]); c.dur = isFinite(v.duration) ? v.duration : NaN; try { v.currentTime = 0; } catch (e) {} }
   c.prog = 0.1; drawClips();
   try { c.audio = await actx().decodeAudioData(await c.file.arrayBuffer()); } catch (e) { c.audio = null; }
+  if (c.audio && !(c.dur > 0)) c.dur = c.audio.duration;
+  if (!(c.dur > 0)) throw new Error('không đọc được độ dài');
   if (c.audio) audioStats(c);
   c.prog = 0.35; drawClips();
   if (c.hasVideo) await frameStats(c, v, p => { c.prog = 0.35 + 0.65 * p; drawClipProg(c); });
@@ -647,6 +668,7 @@ async function frameStats(c, v, onP) {
     for (let p = 0, k = 0; p < d.length; p += 4, k++) { cur[k] = (0.299 * d[p] + 0.587 * d[p + 1] + 0.114 * d[p + 2]) / 255; lum += cur[k]; }
     lum /= cur.length; let mot = 0; if (prev) { for (let k = 0; k < cur.length; k++) mot += Math.abs(cur[k] - prev[k]); mot /= cur.length; }
     fr.push({ t, lum, mot }); prev = cur;
+    if ([0.15, 0.5, 0.85].some(q => i === Math.floor(N * q))) { const kc = document.createElement('canvas'); kc.width = 144; kc.height = 256; kc.getContext('2d').drawImage(v, 0, 0, 144, 256); (c.keys = c.keys || []).push(kc.toDataURL('image/jpeg', 0.6)); }
     if (i === Math.floor(N * 0.3)) { const tc = document.createElement('canvas'); tc.width = 80; tc.height = 142; tc.getContext('2d').drawImage(v, 0, 0, 80, 142); c.thumb = tc.toDataURL('image/jpeg', 0.7); }
     onP((i + 1) / N);
   }
@@ -886,7 +908,19 @@ function buildPlan(key, seed) {
     // 5) Hình: mặt người + chèn cảnh điện thoại (giọng vẫn chạy – L-cut)
     const cuts = [];
     units.forEach(u => { if (!u.c.hasVideo) cuts.push([u.t0, u.t1, 'force']); });
-    if (brolls.length) {
+    const scripted = brolls.length && secs.length && units.some(u => u.sec != null) && Object.keys(S.slots).length;
+    if (scripted) {   // chèn đúng cảnh của từng phần kịch bản
+      const lead = st.key === 'B' ? 0.5 : 0.8, assigned = new Set(Object.values(S.slots).map(Number)), free = brolls.filter(c => !assigned.has(c.id));
+      secs.forEach((x, k) => {
+        const su = units.filter(u => u.sec === k); if (!su.length) return;
+        const a = su[0].t0, last = k === secs.length - 1, b = last ? plan.dur : su[su.length - 1].t1;
+        const c = brolls.find(cc => cc.id == S.slots[k]);
+        const s0 = snapToWord(a + (k === 0 ? (intro ? 0.3 : 1.8) : lead), plan.words, 0.3);
+        if (c) { const L = Math.min(b - s0, c.dur - 0.3); if (L >= 0.8) cuts.push([s0, s0 + L, 'sec', k, c, clamp(0.15, 0, Math.max(0, c.dur - L - 0.05))]); }
+        else if (free.length && b - a > 4) { const s1 = a + 1.6, L = Math.min(2.4, b - s1 - 0.4); if (L > 1) cuts.push([s1, s1 + L, 'free', k]); }
+      });
+      plan.notes.push('Chèn cảnh theo đúng thứ tự kịch bản.');
+    } else if (brolls.length) {
       let cur = intro + (intro ? 1.4 : 2.0);
       while (cur < vEnd - 1.0) {
         let b0 = snapToWord(cur + rr(R, st.face), plan.words, 0.4); let b1 = snapToWord(b0 + rr(R, st.br), plan.words, 0.35);
@@ -896,7 +930,7 @@ function buildPlan(key, seed) {
       }
     }
     cuts.sort((a, b) => a[0] - b[0]);
-    const isCut = (a, b) => cuts.some(([x, y]) => a >= x - 1e-3 && b <= y + 1e-3);
+    const inC = (a, b) => ([x, y]) => a >= x - 1e-3 && b <= y + 1e-3, findCut = (a, b) => cuts.find(c => c[4] && inC(a, b)(c)) || cuts.find(inC(a, b)), isCut = (a, b) => !!findCut(a, b);
     // điểm chia
     const pts = new Set([0, plan.dur, intro, vEnd]); units.forEach(u => { pts.add(u.t0); pts.add(u.t1); }); cuts.forEach(([a, b]) => { pts.add(a); pts.add(b); });
     const P = [...pts].map(x => Math.round(x * 1000) / 1000).filter((x, i, a) => a.indexOf(x) === i && x >= 0 && x <= plan.dur).sort((a, b) => a - b);
@@ -904,17 +938,19 @@ function buildPlan(key, seed) {
     for (let i = 0; i < P.length - 1; i++) {
       const a = P[i], b = P[i + 1]; if (b - a < 0.02) continue; const m = (a + b) / 2;
       if (m < intro) { raw.push({ kind: 'broll', t0: a, t1: b, intro: true }); continue; }
-      if (m > vEnd) { raw.push({ kind: brolls.length ? 'broll' : 'talkTail', t0: a, t1: b, tail: true }); continue; }
+      if (m > vEnd) { raw.push({ kind: brolls.length ? 'broll' : 'talkTail', t0: a, t1: b, tail: true, cut: findCut(a, b) }); continue; }
       const u = units.find(u => m >= u.t0 && m < u.t1);
-      if (isCut(a, b) || !u.c.hasVideo) raw.push({ kind: brolls.length ? 'broll' : 'blank', t0: a, t1: b });
+      if (isCut(a, b) || !u.c.hasVideo) raw.push({ kind: brolls.length ? 'broll' : 'blank', t0: a, t1: b, cut: findCut(a, b) });
       else raw.push({ kind: 'talk', t0: a, t1: b, c: u.c, src0: u.s0 + (a - u.t0), u });
     }
     // gộp các đoạn B-roll liền nhau rồi gán nguồn
-    const merged = []; raw.forEach(s => { const p = merged[merged.length - 1]; if (p && p.kind === s.kind && (s.kind === 'broll' || s.kind === 'blank') && p.t1 - p.t0 < 2.6) p.t1 = s.t1; else merged.push({ ...s }); });
+    const merged = []; raw.forEach(s => { const p = merged[merged.length - 1]; if (p && p.kind === s.kind && (s.kind === 'broll' || s.kind === 'blank') && (p.cut && p.cut[4] ? p.cut === s.cut : !(s.cut && s.cut[4]) && p.t1 - p.t0 < 2.6)) p.t1 = s.t1; else merged.push({ ...s }); });
     let zi = 0, prevTalkEnd = null;
     merged.forEach(s => {
       if (s.kind === 'broll') { const L = s.t1 - s.t0, mu = units.find(u => (s.t0 + s.t1) / 2 >= u.t0 && (s.t0 + s.t1) / 2 < u.t1); s.sec = mu ? mu.sec : (s.tail ? secs.length - 1 : 0);
-        const p = pickBroll(brolls, L, used, R, s.intro ? 'best' : '', s.sec != null ? S.slots[s.sec] : null); s.c = p.c; s.src0 = p.s;
+        if (s.cut && s.cut[4]) { s.sec = s.cut[3]; s.c = s.cut[4]; s.src0 = s.cut[5] + (s.t0 - s.cut[0]); }
+        else { const pool = scripted && !s.intro ? (brolls.filter(c => !Object.values(S.slots).map(Number).includes(c.id)).length ? brolls.filter(c => !Object.values(S.slots).map(Number).includes(c.id)) : brolls) : brolls;
+          const p = pickBroll(pool, L, used, R, s.intro ? 'best' : '', s.sec != null ? S.slots[s.sec] : null); s.c = p.c; s.src0 = p.s; }
         if (mu && mu.c.hasVideo && !s.intro && !s.tail && L >= 1.4) { const r = R(); s.layout = r < st.split ? 'split' : r < st.split + st.pip ? 'pip' : 'full'; } const up = R() > 0.5; s.z0 = up ? 1.03 : 1.13; s.z1 = up ? 1.13 : 1.03; s.px = (R() - 0.5) * 0.08; s.py = (R() - 0.5) * 0.05; }
       else if (s.kind === 'talkTail') { const lu = units[units.length - 1]; s.kind = 'talk'; s.c = lu.c.hasVideo ? lu.c : null; s.src0 = Math.min(lu.s1, lu.c.dur - 0.1); s.freeze = true; s.z0 = 1.12; s.z1 = 1.18; }
       else if (s.kind === 'talk') {
@@ -1000,6 +1036,7 @@ function buildPlan(key, seed) {
     const sx = { glitch: 'glitch', whip: 'swish', flash: 'whoosh', zoom: 'whoosh', leak: 'swish' }[type];
     if (sx) plan.sfx.push({ t: tt - (type === 'glitch' ? 0.02 : 0.12), type: sx });
   }
+  plan.shots.forEach(x => { if (x.kind === 'broll' && x.t1 - x.t0 > 3.6) { x.punch = snapToWord(x.t0 + (x.t1 - x.t0) / 2, plan.words, 0.4); plan.trans.push({ t: x.punch, type: 'punch' }); plan.sfx.push({ t: x.punch, type: 'blip' }); } });
   plan.grade = st.grade; plan.bpm = st.bpm; plan.montage = montage;
   plan.score = evaluate(plan);
   return plan;
@@ -1013,7 +1050,7 @@ function evaluate(p) {
   const instant = (p.hook ? 0.5 : 0) + (firstCap && firstCap.t0 < 0.9 ? 0.3 : (p.montage || (p.style.teaser && p.hook)) ? 0.3 : 0) + (hookWordsScore >= 2 ? 0.2 : hookWordsScore >= 1 ? 0.1 : 0);
   add('Hook trong 2 giây đầu', instant, 18, 'Câu đầu chưa đủ "câu khách". Đặt tiêu đề hook dạng câu hỏi / con số / lợi ích, hoặc ⭐ chọn câu mạnh nhất làm câu mở đầu.', 'Có tiêu đề + lời nói ngay khung đầu');
   const d = p.dur; add('Thời lượng ' + d.toFixed(0) + 's', d >= 20 && d <= 60 ? (d <= 50 ? 1 : 0.8) : d < 20 ? 0.5 : 0, 8, d > 60 ? 'Quá 60s – giảm số câu.' : d < 20 ? 'Hơi ngắn – thêm 1 ý chính.' : '25–45s là đẹp nhất để người xem xem hết.', '');
-  const ev = new Set([0, p.dur]); p.shots.forEach(s => ev.add(s.t0)); p.callouts.forEach(c => ev.add(c.t0)); (p.badges || []).forEach(c => ev.add(c.t0)); (p.emojis || []).forEach(c => ev.add(c.t0)); if (p.cta) ev.add(p.cta.t0);
+  const ev = new Set([0, p.dur]); p.shots.forEach(s => ev.add(s.t0)); p.callouts.forEach(c => ev.add(c.t0)); (p.badges || []).forEach(c => ev.add(c.t0)); (p.trans || []).forEach(c => ev.add(c.t)); (p.emojis || []).forEach(c => ev.add(c.t0)); if (p.cta) ev.add(p.cta.t0);
   const evs = [...ev].sort((a, b) => a - b); let mg = 0; for (let i = 1; i < evs.length; i++) mg = Math.max(mg, evs[i] - evs[i - 1]);
   add('Nhịp thay đổi (dài nhất ' + mg.toFixed(1) + 's không đổi)', mg <= 4 ? 1 : mg <= 5.5 ? 0.5 : 0, 14, 'Có đoạn quá lâu không có thay đổi – thêm cảnh quay điện thoại hoặc bấm 🎲 Sáng tạo lại.', 'Cứ ≤4s có thay đổi');
   const vt = p.voiced.reduce((a, v) => a + v[1] - v[0], 0);
@@ -1247,7 +1284,7 @@ const Player = {
     if (!(s.v && !ready(s.v))) {
       const b = this.bg; b.save(); b.filter = (p.grade || 'none') + (blur > 0.3 ? ` blur(${blur.toFixed(1)}px)` : '') + (Math.abs(whip) > 0.05 ? ` blur(${(Math.abs(whip) * 14).toFixed(1)}px)` : '');
       b.translate(sx + whip * W * 0.35, sy);
-      const z = (s.z0 + (s.z1 - s.z0) * prog) * zx;
+      const z = (s.z0 + (s.z1 - s.z0) * prog) * zx * (s.punch && t >= s.punch ? 1.13 : 1);
       if (s.v && lay === 'split') {
         b.fillStyle = '#000'; b.fillRect(-40, -40, W + 80, H + 80);
         b.save(); b.beginPath(); b.rect(0, H / 2, W, H / 2); b.clip(); cover(b, s.v, 0, H / 2, W, H / 2, z, 0.5, 0.5, (s.px || 0) * (prog - 0.5), 0); b.restore();
