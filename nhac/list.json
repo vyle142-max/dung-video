@@ -1,0 +1,10 @@
+[
+  { "file": "soi-dong-1.mp3", "name": "Sôi động 1", "mood": "soi-dong" },
+  { "file": "soi-dong-2.mp3", "name": "Sôi động 2", "mood": "soi-dong" },
+  { "file": "vui-1.mp3", "name": "Vui tươi 1", "mood": "vui" },
+  { "file": "vui-2.mp3", "name": "Vui tươi 2", "mood": "vui" },
+  { "file": "dien-anh-1.mp3", "name": "Điện ảnh 1", "mood": "dien-anh" },
+  { "file": "dien-anh-2.mp3", "name": "Điện ảnh 2", "mood": "dien-anh" },
+  { "file": "cong-nghe-1.mp3", "name": "Công nghệ", "mood": "soi-dong" },
+  { "file": "nhe-nhang-1.mp3", "name": "Nhẹ nhàng", "mood": "vui" }
+]
