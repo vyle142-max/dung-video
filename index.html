@@ -85,7 +85,7 @@ details.book summary{cursor:pointer;font-weight:700}details.book ol{padding-left
 <div id="app"></div>
 <script type="module">
 /* ===================== DỰNG VIDEO – OPPO MIỀN ĐÔNG (Đợt 1) ===================== */
-const VERSION = '2026.11.15-1930';
+const VERSION = '2026.11.15-2030';
 const W = 1080, H = 1920, FPS = 30;
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -270,14 +270,14 @@ async function gemModels() {
   store('vs_gem_models', JSON.stringify({ key: S.gemKey.slice(-6), at: Date.now(), list }));
   return list;
 }
-async function gemini(parts, temp) {   // hỏi lần lượt (cách nhau 8s) nhiều đời AI, lấy kết quả đến trước
+async function gemini(parts, temp, waitMs) {   // hỏi lần lượt (cách nhau 8s) nhiều đời AI, lấy kết quả đến trước
   const body = JSON.stringify({ contents: [{ parts }], generationConfig: { responseMimeType: 'application/json', temperature: temp == null ? 1 : temp } });
   let cands = (await gemModels()).slice(0, 4); if (!cands.includes('gemini-flash-latest')) cands.push('gemini-flash-latest');
   const ctrls = [], errs = []; let done = false;
   const one = async (m, delay) => {
     await sleep(delay); if (done) throw new Error('skip');
     gemStatus(m + ' đang viết…');
-    const ac = new AbortController(); ctrls.push(ac); const tm = setTimeout(() => ac.abort(), 60000);
+    const ac = new AbortController(); ctrls.push(ac); const tm = setTimeout(() => ac.abort(), waitMs || 60000);
     try {
       const r = await fetch(GEM + 'models/' + m + ':generateContent', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': S.gemKey }, body, signal: ac.signal });
       const j = await r.json(); if (j.error) throw new Error(j.error.message);
@@ -465,15 +465,15 @@ function drawSlots() {
   });
   const silentVo = S.clips.find(c => c.kind === 'vo' && !c.st && c.audio && !(c.voiced || []).length);
   el.innerHTML = (silentVo && (!vc || vc.kind !== 'vo') ? `<p class="sub" style="color:var(--bad)">⚠️ File <b>${esc(silentVo.name)}</b> không có tiếng nói (micro không thu được). Thu lại – lúc thu thanh xanh phải nhảy khi bạn nói – hoặc ghi âm bằng điện thoại rồi kéo file vào ô Nguyên liệu.</p>` : '') + (vc ? `<p class="sub">🎙️ Giọng lời thoại: <b>${esc(vc.name)}</b> – web đã chia giọng theo từng phần (bấm ▶ để nghe kiểm tra).</p>` : '<p class="sub">⚠️ Chưa có giọng thu / clip có giọng nói. Bấm <b>🎙️ Thu giọng</b> và đọc liền cả kịch bản.</p>')
-    + P.sections.map((x, i) => { const sp = vc && vc.sents[i] && vc.sents[i].sec === i ? vc.sents[i] : null;
+    + P.sections.map((x, i) => { const parts = vc ? vc.sents.filter(z => !z.off && z.sec === i) : [], sp = parts.length ? { t0: parts[0].t0, t1: parts[parts.length - 1].t1, n: parts.length, len: parts.reduce((a, z) => a + z.t1 - z.t0, 0) } : null;
       return `<div class="slot ${S.slots[i] ? 'ok' : ''}"><span class="sn">${i + 1}</span><div style="flex:1;min-width:0"><div class="st2"><b>${esc(x.part)}</b> · ${esc(x.say)}</div>
-      ${sp ? `<div class="sub" style="margin:2px 0 0">🎙️ ${fmt(sp.t0)}–${fmt(sp.t1)} (${(sp.t1 - sp.t0).toFixed(1)}s) <a href="#" data-play="${i}" style="color:#7ec3ff">▶ nghe</a></div>` : ''}
+      ${sp ? `<div class="sub" style="margin:2px 0 0">🎙️ ${fmt(sp.t0)}–${fmt(sp.t1)} (${sp.len.toFixed(1)}s${sp.n > 1 ? ', ' + sp.n + ' đoạn' : ''}) <a href="#" data-play="${i}" style="color:#7ec3ff">▶ nghe</a></div>` : (vc ? '<div class="sub" style="margin:2px 0 0;color:var(--warn)">⚠️ Chưa tìm thấy lời của phần này</div>' : '')}
       <select data-slot="${i}"><option value="">${br.length ? '— Web tự chọn —' : '— Chưa có clip cảnh quay —'}</option>${faces.length ? `<option value="face" ${S.slots[i] === 'face' ? 'selected' : ''}>👤 Mặt người nói</option>` : ''}${br.map(c => `<option value="${c.id}" ${S.slots[i] == c.id ? 'selected' : ''}>📱 ${esc(c.name)}</option>`).join('')}</select>
       <div class="sub" style="margin:2px 0 0">Cảnh cần: ${esc(x.shot.title)}</div></div></div>`; }).join('')
     + `<p class="sub" style="margin-top:6px">Web tự xếp clip theo thứ tự tên file (thứ tự quay). Sai cảnh nào thì chọn lại.</p>`
     + (br.length ? `<button class="btn sm ${S.gemKey ? 'pri' : ''}" id="aiSlots" style="margin-top:4px">🤖 AI xem hình & xếp cảnh</button><span id="aiSlotsSt" class="sub" style="margin-left:6px"></span>` : '');
   const ab = $('#aiSlots'); if (ab) ab.onclick = () => aiSlots(true);
-  el.querySelectorAll('[data-play]').forEach(a => a.onclick = e => { e.preventDefault(); const sp = vc.sents[+a.dataset.play]; playSpan(vc, sp.t0, sp.t1); });
+  el.querySelectorAll('[data-play]').forEach(a => a.onclick = e => { e.preventDefault(); const k = +a.dataset.play; playParts(vc, vc.sents.filter(z => !z.off && z.sec === k).map(z => [z.t0, z.t1])); });
   el.querySelectorAll('[data-slot]').forEach(x => x.onchange = () => { S.slotsLocked = true; if (x.value === 'face') S.slots[x.dataset.slot] = 'face'; else if (x.value) S.slots[x.dataset.slot] = +x.value; else delete S.slots[x.dataset.slot]; drawSlots(); if (S.variants.length) direct(false); });
 }
 async function aiSlots(manual) {
@@ -555,6 +555,8 @@ function app() {
         <div class="row2"><button class="btn pri" id="asrBtn">🤖 Tạo phụ đề AI</button>
           <select class="inp" id="asrModel"><option value="Xenova/whisper-small">Chính xác (small)</option><option value="Xenova/whisper-base">Nhanh (base)</option></select></div>
         <div id="asrSt" class="sub" style="margin-top:6px"></div>
+        <div style="margin-top:8px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--card2)"><b>✂️ Clip dài có chỗ vấp?</b><p class="sub" style="margin:4px 0 6px">Quay liền 1 mạch, vấp thì nói lại – web nghe và tự cắt chỗ vấp, ừm à, câu nói lại, giữ lần nói trọn vẹn cuối cùng.${S.gemKey ? '' : ' <b>Nên có key AI Gemini</b> (bước 1) để cắt chính xác.'}</p>
+          <button class="btn pri" id="cutBtn">✂️ Tự cắt chỗ vấp</button> <span id="cutSt" class="sub"></span></div>
         <details style="margin-top:6px" ${S.opt.script ? 'open' : ''}><summary class="sub" style="cursor:pointer">✍️ Kịch bản để khớp vào giọng</summary>
           <textarea class="inp" id="script" placeholder="Mỗi câu một dòng.">${esc(S.opt.script)}</textarea>
           <button class="btn sm" id="alignBtn" style="margin-top:6px">Khớp kịch bản</button></details>
@@ -610,6 +612,7 @@ function app() {
   $('#recBtn').onclick = recordVoice;
   $('#asrModel').value = S.opt.model; $('#asrModel').onchange = e => S.opt.model = e.target.value;
   $('#asrBtn').onclick = runASR; $('#alignBtn').onclick = alignScript;
+  $('#cutBtn').onclick = () => { const c = S.clips.find(x => x.kind === 'talk' && x.audio && !x.st) || S.clips.find(x => x.kind === 'vo' && x.audio && !x.st); autoCut(c); };
   $('#script').oninput = e => S.opt.script = e.target.value;
   const bind = (id, k, num) => { const el = $(id); el.onchange = () => { S.opt[k] = num ? Number(el.value) : el.value; if (S.variants.length) direct(false); }; };
   bind('#oHook', 'hook'); bind('#oCta', 'cta'); bind('#oBrand', 'brand'); bind('#oCap', 'cap'); bind('#oLen', 'maxLen', true); bind('#oFx', 'fx');
@@ -841,13 +844,76 @@ function alignScript(quiet) {
 function drawSents() {
   const el = $('#sents'); if (!el) return;
   const list = S.clips.filter(c => (c.kind === 'talk' || c.kind === 'vo') && c.sents.length);
-  el.innerHTML = list.map(c => `<div class="sub" style="margin:8px 0 2px;font-weight:700">${esc(c.name)}</div>` + c.sents.map((s, i) => `<div class="sent" style="${s.off ? 'opacity:.4' : ''}">
-    <span class="tm">${fmt(s.t0)}</span><span class="t" contenteditable="true" data-c="${c.id}" data-i="${i}">${esc(s.text)}</span>
+  el.innerHTML = list.map(c => `<div class="sub" style="margin:8px 0 2px;font-weight:700">${esc(c.name)}${c.autoCut ? ` · ✂️ giữ ${c.sents.filter(x => !x.off).length}/${c.sents.length} đoạn, cắt ${c.sents.filter(x => x.off).reduce((a, x) => a + x.t1 - x.t0, 0).toFixed(1)}s` : ''}</div>` + c.sents.map((s, i) => `<div class="sent" style="${s.off ? 'opacity:.55' : ''}">
+    <span class="tm">${fmt(s.t0)}<br><a href="#" data-pls="${c.id}:${i}" style="color:#7ec3ff;font-size:11px">▶ nghe</a></span><span class="t" contenteditable="true" data-c="${c.id}" data-i="${i}" style="${s.off ? 'text-decoration:line-through;color:#f2858a' : ''}">${s.off && s.why ? `<b class="pill b" style="text-decoration:none">${esc(s.why)}</b> ` : ''}${esc(s.text || '(không lời)')}</span>
     <button class="hk ${s.hook ? 'on' : ''}" data-hk="${c.id}:${i}" title="Dùng làm câu mở đầu">⭐</button><button class="hk ${s.off ? 'on' : ''}" data-off="${c.id}:${i}" title="Bỏ câu này">🗑</button></div>`).join('')).join('');
   const get = k => { const [cid, i] = k.split(':'); return S.clips.find(c => c.id == cid).sents[i]; };
-  el.querySelectorAll('.t').forEach(t => t.onblur = () => { const s = S.clips.find(c => c.id == t.dataset.c).sents[t.dataset.i]; const v = cleanText(t.textContent); if (v !== s.text) { s.text = v; s.words = splitWords(v, s.t0, s.t1); if (S.variants.length) direct(false); } });
+  el.querySelectorAll('.t').forEach(t => t.onblur = () => { const s = S.clips.find(c => c.id == t.dataset.c).sents[t.dataset.i]; const pill = t.querySelector('.pill'); if (pill) pill.remove(); const v = cleanText(t.textContent); if (!v && !s.text) return; if (v !== s.text) { s.text = v; s.words = splitWords(v, s.t0, s.t1); if (S.variants.length) direct(false); } });
   el.querySelectorAll('[data-hk]').forEach(b => b.onclick = () => { const s = get(b.dataset.hk); const v = !s.hook; S.clips.forEach(c => c.sents.forEach(x => x.hook = false)); s.hook = v; drawSents(); if (S.variants.length) direct(false); });
   el.querySelectorAll('[data-off]').forEach(b => b.onclick = () => { const s = get(b.dataset.off); s.off = !s.off; drawSents(); if (S.variants.length) direct(false); });
+  el.querySelectorAll('[data-pls]').forEach(a => a.onclick = e => { e.preventDefault(); const [cid, i] = a.dataset.pls.split(':'), c = S.clips.find(x => x.id == cid), x = c.sents[i]; playSpan(c, x.t0, x.t1); });
+}
+
+/* ===================== TỰ CẮT CHỖ VẤP (A-roll dài) ===================== */
+const FILLER_RE = /^(ừ+m*|ừm+|ờ+m*|à+|ơ+|ư+|hừm+|thì|là|kiểu|kiểu như|ờ thì|à thì|vâng|dạ)[\s,.…!?]*$/i;
+function normTxt(t) { return String(t || '').toLowerCase().normalize('NFC').replace(/[.,!?…:;"“”()\-]/g, ' ').replace(/\s+/g, ' ').trim(); }
+function simTxt(a, b) { const A = normTxt(a).split(' ').filter(Boolean), B = normTxt(b).split(' ').filter(Boolean); if (!A.length || !B.length) return 0; const sb = new Set(B); let n = 0; A.forEach(w => sb.has(w) && n++); return 2 * n / (A.length + B.length); }
+function wav16(f32, sr) { const n = f32.length, b = new ArrayBuffer(44 + n * 2), v = new DataView(b), w = (o, s) => [...s].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+  w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVEfmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, n * 2, true);
+  for (let i = 0; i < n; i++) v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, f32[i])) * 32767, true); return b; }
+async function toRate(buf, sr) { const len = Math.ceil(buf.duration * sr), oc = new OfflineAudioContext(1, len, sr); const s = oc.createBufferSource(); s.buffer = buf; s.connect(oc.destination); s.start(); return (await oc.startRendering()).getChannelData(0); }
+function b64(ab) { const u = new Uint8Array(ab); let s = ''; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); }
+function snapSeg(c, s, e) {   // khớp mép đoạn vào chỗ có giọng thật (dấu thời gian AI có thể lệch nhẹ)
+  const vs = (c.voiced || []).filter(v => v.t1 > s - 0.35 && v.t0 < e + 0.35); if (!vs.length) return [s, e];
+  let a = vs[0].t0, b = vs[vs.length - 1].t1; if (a < s - 0.35) a = Math.max(a, s - 0.35); if (b > e + 0.35) b = Math.min(b, e + 0.35);
+  return [Math.max(0, a), Math.min(c.dur, Math.max(a + 0.2, b))];
+}
+function ruleCut(c, segs) {   // không có AI: dùng luật – từ đệm, câu lặp lại, đoạn quá ngắn
+  const secs = S.plan.sections, lines = secs.flatMap((x, k) => x.say.split(/(?<=[.!?…])\s+/).map(l => ({ l, k })));
+  segs.forEach((g, i) => { g.keep = true; const t = normTxt(g.text);
+    if (g.text && FILLER_RE.test(g.text.trim())) { g.keep = false; g.reason = 'ừm à'; return; }
+    if (!g.text && g.e - g.s < 0.6) { g.keep = false; g.reason = 'tiếng thừa'; return; }
+    for (let j = i + 1; j <= Math.min(segs.length - 1, i + 2); j++) { const n = segs[j]; if (!g.text || !n.text) continue; const nt = normTxt(n.text);
+      if (simTxt(g.text, n.text) > 0.55 || (t.length > 6 && nt.startsWith(t.slice(0, Math.max(6, Math.floor(t.length * 0.6)))))) { g.keep = false; g.reason = 'nói lại'; return; } }
+    if (lines.length && g.text) { let best = -1, bs = 0; lines.forEach((x, k) => { const sm = simTxt(g.text, x.l); if (sm > bs) { bs = sm; best = k; } }); if (bs > 0.3) g.sec = lines[best].k; }
+  });
+  return segs;
+}
+async function autoCut(c) {
+  const st = $('#cutSt'), btn = $('#cutBtn'); if (!c || !c.audio) return toast('Chưa có clip người nói (A-roll) có tiếng.', true);
+  btn.disabled = true; const t0 = Date.now(); const tick = setInterval(() => st.textContent = `⏳ ${Math.round((Date.now() - t0) / 1000)}s · ${st.dataset.n || ''}`, 500);
+  const secs = S.plan.sections; let segs = null, by = '';
+  try {
+    if (S.gemKey) {
+      st.dataset.n = 'chuẩn bị âm thanh…';
+      const sr = c.audio.duration > 480 ? 8000 : 16000; const wav = wav16(await toRate(c.audio, sr), sr);
+      if (wav.byteLength > 18e6) throw new Error('clip quá dài cho AI (tối đa ~15 phút)');
+      st.dataset.n = 'AI đang nghe clip…';
+      const prompt = `Đây là ghi âm 1 người nói tiếng Việt khi quay video TikTok, dài ${c.audio.duration.toFixed(1)} giây. Người nói có thể vấp, ấp úng, nói hỏng rồi nói lại, nói chen "ừm, à", hoặc nói ngoài lề ("quay lại", "sai rồi") nhưng không dừng máy.
+${secs.length ? 'Kịch bản dự kiến (đánh số phần):\n' + secs.map((x, k) => k + ': ' + x.say).join('\n') + '\n' : ''}Hãy chép lại TOÀN BỘ lời nói, chia thành các đoạn liên tục (mỗi đoạn là 1 câu hoặc 1 cụm, ngắt ở chỗ người nói dừng/ngập ngừng). Mỗi đoạn trả:
+- "s","e": thời điểm bắt đầu/kết thúc tính bằng GIÂY (số thập phân, chính xác nhất có thể),
+- "text": lời nói đúng như nghe được,
+- "keep": true nếu nên giữ trong video; false nếu là: câu nói hỏng/bỏ dở, lần nói trước của một câu được nói lại sau đó (luôn GIỮ lần nói trọn vẹn CUỐI CÙNG), từ đệm đứng riêng (ừm, à, ờ), nói nhầm, nói ngoài lề,
+- "reason": nếu keep=false thì 1 trong: "vấp", "nói lại", "ừm à", "ngoài lề", "dở dang",
+- "sec": ${secs.length ? 'số thứ tự phần kịch bản mà đoạn này thuộc về' : 'null'}.
+Chỉ trả JSON: {"segments":[...]}`;
+      const o = await gemini([{ text: prompt }, { inline_data: { mime_type: 'audio/wav', data: b64(wav) } }], 0.1, 150000);
+      const arr = Array.isArray(o) ? o : (o.segments || []);
+      segs = arr.map(x => ({ s: +x.s || +x.start || 0, e: +x.e || +x.end || 0, text: cleanText(x.text || ''), keep: x.keep !== false, reason: x.reason || '', sec: x.sec == null || x.sec === '' ? null : +x.sec })).filter(x => x.e > x.s && x.s < c.audio.duration + 1);
+      if (!segs.length) throw new Error('AI không chép được lời');
+      by = 'AI Gemini';
+    }
+  } catch (e) { toast('AI chưa nghe được (' + esc(String(e.message).slice(0, 100)) + ') – dùng cách cắt theo luật.', true, 8000); segs = null; }
+  if (!segs) {   // dự phòng: dùng phụ đề AI trên máy (nếu đã chạy) hoặc các cụm có giọng
+    const base = c.sents.length && !c.autoCut && c.sents.some(x => x.text) ? c.sents.map(x => ({ s: x.t0, e: x.t1, text: x.text })) : phrasesOf(c).map(x => ({ s: x.t0, e: x.t1, text: '' }));
+    segs = ruleCut(c, base); by = 'luật (không AI)';
+  }
+  segs.sort((a, b) => a.s - b.s);
+  c.sents = segs.map((g, i) => { const [a, b] = snapSeg(c, g.s, g.e); const se = mkSent(c, a, b, g.text); se.id = c.id + '_c' + i; se.off = !g.keep; se.why = g.keep ? '' : (g.reason || 'cắt'); if (g.sec != null && !isNaN(g.sec)) se.sec = clamp(g.sec, 0, Math.max(0, secs.length - 1)); return se; });
+  for (let i = 1; i < c.sents.length; i++) { const p = c.sents[i - 1], q = c.sents[i]; if (q.t0 < p.t1) { const m = (p.t1 + q.t0) / 2; p.t1 = Math.max(p.t0 + 0.2, m); q.t0 = Math.min(q.t1 - 0.2, m); p.words = splitWords(p.text, p.t0, p.t1); q.words = splitWords(q.text, q.t0, q.t1); } }
+  c.autoCut = true; c.secKey = null; clearInterval(tick); btn.disabled = false;
+  const cut = c.sents.filter(x => x.off); st.innerHTML = `✅ ${by}: giữ <b>${c.sents.length - cut.length}</b> đoạn, cắt <b>${cut.length}</b> đoạn (${cut.reduce((a, x) => a + x.t1 - x.t0, 0).toFixed(1)}s). Xem danh sách bên dưới – đoạn gạch đỏ là bị cắt, bấm 🗑 để giữ lại.`;
+  drawClips(); drawSents(); drawSlots(); if (S.variants.length) direct(false);
 }
 
 /* ===================== KHO HIỆU ỨNG: Lottie + lớp phủ video ===================== */
@@ -1001,6 +1067,7 @@ function voiceSrc() { return S.clips.find(c => c.kind === 'vo' && c.audio && !c.
 function scriptMode() { return !!(S.plan.sections.length && voiceSrc()); }
 function splitVoice(c) {
   const secs = S.plan.sections, segs = c.voiced || []; if (!segs.length || !secs.length) return false;
+  if (c.autoCut) return true;
   const key = secs.map(x => x.say).join('|'); if (c.secKey === key && c.sents.length === secs.length) return true;
   const T = segs.reduce((a, v) => a + v.t1 - v.t0, 0), Ls = secs.map(x => Math.max(4, x.say.length)), Lt = Ls.reduce((a, b) => a + b, 0);
   const at = x => { let r = x; for (const v of segs) { const d = v.t1 - v.t0; if (r <= d + 1e-6) return v.t0 + r; r -= d; } return segs[segs.length - 1].t1; };
@@ -1014,6 +1081,7 @@ function splitVoice(c) {
   c.sents = secs.map((x, k) => { const t0 = k ? cut[k - 1].b : segs[0].t0, t1 = k < secs.length - 1 ? cut[k].a : segs[segs.length - 1].t1; const se = mkSent(c, t0, Math.max(t0 + 0.3, t1), x.say); se.sec = k; return se; });
   c.secKey = key; return true;
 }
+function playParts(c, parts) { try { const ac = actx(); ac.resume(); let t = ac.currentTime + 0.05; parts.forEach(([a, b]) => { const s = ac.createBufferSource(); s.buffer = c.audio; s.connect(ac.destination); s.start(t, a, b - a); t += b - a; }); } catch (e) {} }
 function playSpan(c, a, b) { try { const ac = actx(); ac.resume(); const s = ac.createBufferSource(); s.buffer = c.audio; s.connect(ac.destination); s.start(0, a, b - a); } catch (e) {} }
 
 function buildPlan(key, seed) {
@@ -1086,7 +1154,9 @@ function buildPlan(key, seed) {
         const su = units.filter(u => u.sec === k); if (!su.length) return;
         const a = su[0].t0, b = k === secs.length - 1 ? plan.dur : su[su.length - 1].t1, v = S.slots[k];
         if (v === 'face') { const fc = faces[0]; if (!fc || fc === VC) return; const L = b - a; cuts.push([a, b, 'sec', k, fc, faceCur % Math.max(1, fc.dur - L), 'face']); faceCur += L; return; }
-        const c = brolls.find(cc => cc.id == v); if (c) { cuts.push([a, b, 'sec', k, c, clamp(0.15, 0, Math.max(0, c.dur - (b - a) - 0.05))]); return; }
+        const c = brolls.find(cc => cc.id == v);
+        if (c && VC.hasVideo) { const s0 = snapToWord(a + (k === 0 ? 1.8 : (st.key === 'B' ? 0.5 : 0.8)), plan.words, 0.3), L0 = Math.min(c.dur - 0.3, 4.5, b - s0 - (k === secs.length - 1 ? 0 : 0.5)), L = b - s0 - L0 < 1.1 ? b - s0 : L0; if (L >= 0.9) cuts.push([s0, s0 + L, 'sec', k, c, 0.15]); return; }
+        if (c) { cuts.push([a, b, 'sec', k, c, clamp(0.15, 0, Math.max(0, c.dur - (b - a) - 0.05))]); return; }
         if (!VC.hasVideo) cuts.push([a, b, 'free', k]);
       });
       plan.notes.push('Dựng theo kịch bản: giọng thu làm lời thoại, mỗi phần đúng cảnh đã chọn.');
