@@ -27,6 +27,7 @@ label.f{display:block;margin-bottom:9px}label.f>span{display:block;font-size:12p
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
 .card h3{margin:0 0 10px;font-size:14.5px;display:flex;align-items:center;gap:8px}.card h3 .n{width:22px;height:22px;border-radius:50%;background:var(--brand);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:12px;flex:none}
 .sub{color:var(--muted);font-size:12.5px;margin:0 0 8px}
+.drop.bin{padding:14px 8px;line-height:1.35}.drop.bin small{color:var(--muted)}
 .drop{border:1.5px dashed #3a414c;border-radius:12px;padding:16px;text-align:center;color:var(--muted);cursor:pointer;display:block}.drop:hover{border-color:var(--brand);color:var(--text)}
 .clip{display:flex;gap:9px;align-items:center;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:7px;margin-top:7px}
 .clip img,.clip .ph{width:40px;height:62px;border-radius:6px;object-fit:cover;background:#000;flex:none;display:flex;align-items:center;justify-content:center;font-size:20px}
@@ -85,7 +86,7 @@ details.book summary{cursor:pointer;font-weight:700}details.book ol{padding-left
 <div id="app"></div>
 <script type="module">
 /* ===================== DỰNG VIDEO – OPPO MIỀN ĐÔNG (Đợt 1) ===================== */
-const VERSION = '2026.11.15-2030';
+const VERSION = '2026.11.15-2130';
 const W = 1080, H = 1920, FPS = 30;
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -153,7 +154,7 @@ const S = {
   clips: [], music: null, seed: 1,
   opt: { hook: '', cta: 'Ghé shop OPPO gần nhất trải nghiệm ngay!', brand: 'OPPO MIỀN ĐÔNG', cap: 'auto', maxLen: 58, bar: true, script: '', model: 'Xenova/whisper-small', fx: 'full' },
   plan: { idea: '', goal: 'shop', aud: 'genz', len: 45, tone: 'vui', formula: 'auto', hooks: [], hookIdx: 0, sections: [], links: [], by: '' },
-  slots: {}, sample: null, gemKey: '', lib: [], musicSel: 'auto',
+  slots: {}, bmap: {}, bwhy: {}, sample: null, gemKey: '', lib: [], musicSel: 'auto',
   variants: [], cur: 0,
 };
 let nextId = 1;
@@ -453,7 +454,19 @@ function drawSlots() {
   const el = $('#slots'); if (!el) return; const P = S.plan;
   const br = S.clips.filter(c => c.kind === 'broll' && !c.st).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
   const faces = S.clips.filter(c => c.kind === 'talk' && c.hasVideo && !c.st), vc = voiceSrc();
-  if (!P.sections.length) { el.innerHTML = '<p class="sub">Chưa có kịch bản – web tự chọn cảnh. Muốn dựng đúng thứ tự, hãy làm bước 1–2.</p>'; return; }
+  const kept = arollKept();
+  if (kept.length && br.length) {   // A-roll đã cắt: hiển thị B-roll ghép vào câu nào
+    if (!Object.keys(S.bmap).length) { el.innerHTML = '<p class="sub">⏳ Đang ghép B-roll…</p>'; matchBroll(true); return; }
+    el.innerHTML = `<p class="sub">🎞️ Mỗi B-roll được chèn vào đúng câu đang nói về nó (giọng vẫn chạy). Sai thì chọn lại câu.</p>` + br.map(c => { const sid = S.bmap[c.id];
+      return `<div class="slot ${sid ? 'ok' : ''}">${c.thumb ? `<img src="${c.thumb}" style="width:34px;height:60px;object-fit:cover;border-radius:6px;flex:none">` : '<span class="sn">🎞️</span>'}<div style="flex:1;min-width:0"><div class="st2"><b>${esc(c.name)}</b> · ${c.dur.toFixed(1)}s</div>
+      <select data-bm="${c.id}"><option value="">— Không dùng —</option>${kept.map(x => `<option value="${x.id}" ${x.id === sid ? 'selected' : ''}>${fmt(x.t0)} · ${esc((x.text || '(không rõ lời)').slice(0, 48))}</option>`).join('')}</select>
+      ${S.bwhy[c.id] ? `<div class="sub" style="margin:2px 0 0">🤖 ${esc(S.bwhy[c.id])}</div>` : ''}</div></div>`; }).join('')
+      + `<button class="btn sm ${S.gemKey ? 'pri' : ''}" id="bmRe" style="margin-top:6px">🤖 Ghép lại bằng AI</button> <span id="bmSt" class="sub"></span>`;
+    el.querySelectorAll('[data-bm]').forEach(x => x.onchange = () => { const id = +x.dataset.bm; Object.keys(S.bmap).forEach(k => { if (S.bmap[k] === x.value && +k !== id) delete S.bmap[k]; }); if (x.value) S.bmap[id] = x.value; else delete S.bmap[id]; S.bwhy[id] = 'bạn chọn'; drawSlots(); if (S.variants.length) direct(false); });
+    $('#bmRe').onclick = () => matchBroll(true);
+    return;
+  }
+  if (!P.sections.length) { el.innerHTML = '<p class="sub">Chưa có kịch bản – web tự chọn cảnh. Muốn dựng đúng thứ tự, hãy làm bước 1–2. Có clip A-roll dài thì bấm ✂️ Tự cắt chỗ vấp, web sẽ tự ghép B-roll theo lời.</p>'; return; }
   if (vc) splitVoice(vc);
   const used = new Set(Object.values(S.slots).filter(v => v !== 'face').map(Number)); let k = 0;
   P.sections.forEach((x, i) => {
@@ -542,7 +555,9 @@ function app() {
     <div class="left">
       <div class="card"><h3><span class="n">3</span>Nguyên liệu</h3>
         <p class="sub">Thả clip <b>người nói</b> (có giọng) và các clip <b>cảnh quay điện thoại</b>. Web tự nhận loại – sai thì chọn lại.</p>
-        <label class="drop" id="drop"><input type="file" id="fIn" accept="video/*,audio/*" multiple hidden>⬆️ Chọn hoặc kéo thả clip vào đây</label>
+        <div class="row2"><label class="drop bin" id="dropA"><input type="file" id="fInA" accept="video/*,audio/*" multiple hidden><b style="font-size:15px">🗣️ A-roll</b><br><small>clip bạn nói (có mặt / giọng)</small></label>
+          <label class="drop bin" id="dropB"><input type="file" id="fInB" accept="video/*" multiple hidden><b style="font-size:15px">📱 B-roll</b><br><small>cảnh quay máy, đồ vật</small></label></div>
+        <label class="drop" id="drop" style="margin-top:6px;padding:7px;font-size:12px"><input type="file" id="fIn" accept="video/*,audio/*" multiple hidden>Không rõ loại? Thả chung vào đây để web tự nhận</label>
         <div id="clips"></div>
         <div class="row2" style="margin-top:10px"><button class="btn" id="recBtn">🎙️ Thu giọng</button>
           <label class="btn" style="justify-content:center">🎵 Tải nhạc riêng<input type="file" id="mIn" accept="audio/*" hidden></label></div>
@@ -604,9 +619,10 @@ function app() {
   $('#tpBtn').onclick = teleprompter; $('#dlShots').onclick = downloadShots;
   $('#toClips').onclick = () => goStep(3); $('#skipPlan').onclick = () => goStep(3);
   // bước 3–4
-  const fIn = $('#fIn'); fIn.onchange = () => { addFiles([...fIn.files]); fIn.value = ''; };
-  const dr = $('#drop'); dr.ondragover = e => { e.preventDefault(); dr.style.borderColor = 'var(--brand)'; }; dr.ondragleave = () => dr.style.borderColor = '';
-  dr.ondrop = e => { e.preventDefault(); dr.style.borderColor = ''; addFiles([...e.dataTransfer.files]); };
+  [['#fIn', '#drop', ''], ['#fInA', '#dropA', 'talk'], ['#fInB', '#dropB', 'broll']].forEach(([fi, dz, kind]) => {
+    const fIn = $(fi); fIn.onchange = () => { addFiles([...fIn.files], kind); fIn.value = ''; };
+    const dr = $(dz); dr.ondragover = e => { e.preventDefault(); dr.style.borderColor = 'var(--brand)'; }; dr.ondragleave = () => dr.style.borderColor = '';
+    dr.ondrop = e => { e.preventDefault(); dr.style.borderColor = ''; addFiles([...e.dataTransfer.files], kind); }; });
   $('#mIn').onchange = e => setMusic(e.target.files[0]);
   $('#mSel').onchange = e => { S.musicSel = e.target.value; if (S.variants.length) selectVariant(S.cur); };
   $('#recBtn').onclick = recordVoice;
@@ -626,29 +642,46 @@ function app() {
 }
 
 /* ---------- Nhập & phân tích clip ---------- */
-async function addFiles(files) {
-  for (const f of files) {
-    if (!/^(video|audio)\//.test(f.type) && !/\.(mp4|mov|webm|m4v|mkv|mp3|m4a|wav|aac|ogg)$/i.test(f.name)) continue;
-    const c = { id: nextId++, file: f, name: f.name, url: URL.createObjectURL(f), st: 'Đang phân tích…', prog: 0, kind: '', sents: [] };
-    S.clips.push(c); drawClips();
-    try { await analyzeClip(c); c.st = ''; } catch (e) { c.st = 'Lỗi: ' + e.message; c.bad = true; }
-    drawClips(); refreshButtons(); drawSlots();
-    if (!S.clips.some(x => x.st && !x.bad) && S.gemKey && S.plan.sections.length && !S.slotsLocked && S.clips.filter(x => x.kind === 'broll').length > 1) aiSlots(false);
-  }
+function fixKinds() {   // 1 clip A-roll dài + nhiều B-roll: clip dài nhất có giọng là người nói, còn lại là cảnh quay
+  const vids = S.clips.filter(c => c.hasVideo && !c.st && !c.userKind); if (vids.length < 2) return;
+  const talky = vids.filter(c => c.voiced && c.voiced.length && c.voicedRatio > 0.25).sort((a, b) => b.dur - a.dur);
+  const longest = talky[0]; if (!longest) return;
+  if (longest.dur >= 15 && longest.dur > 1.8 * Math.max(...vids.filter(c => c !== longest).map(c => c.dur))) vids.forEach(c => { c.kind = c === longest ? 'talk' : (c.kind === 'talk' ? 'broll' : c.kind); });
 }
-async function analyzeClip(c) {
+async function addFiles(files, forced) {
+  const list = [];
+  for (const f of files) {
+    if (!/^(video|audio)\//.test(f.type) && !/\.(mp4|mov|webm|m4v|mkv|mp3|m4a|wav|aac|ogg|3gp)$/i.test(f.name)) continue;
+    const c = { id: nextId++, file: f, name: f.name, url: URL.createObjectURL(f), st: 'Chờ phân tích…', prog: 0, kind: forced || '', userKind: !!forced, sents: [] };
+    S.clips.push(c); list.push(c);
+  }
+  drawClips();
+  let i = 0; const worker = async () => { while (i < list.length) { const c = list[i++];   // phân tích 2 clip song song
+    try { await analyzeClip(c, forced); c.st = ''; } catch (e) { c.st = 'Lỗi: ' + e.message; c.bad = true; }
+    drawClips(); refreshButtons(); } };
+  await Promise.all([worker(), worker()]);
+  if (!S.clips.some(x => x.st && !x.bad)) fixKinds();
+  drawClips(); refreshButtons(); drawSlots();
+  if (!S.clips.some(x => x.st && !x.bad) && S.gemKey && S.plan.sections.length && !S.slotsLocked && !arollKept().length && S.clips.filter(x => x.kind === 'broll').length > 1) aiSlots(false);
+  if (arollKept().length && list.some(c => c.kind === 'broll')) { S.bmap = {}; drawSlots(); }
+}
+async function analyzeClip(c, forced) {
   const v = document.createElement('video'); v.muted = true; v.preload = 'auto'; v.playsInline = true; v.src = c.url;
-  await once(v, 'loadedmetadata');
-  c.dur = v.duration; c.w = v.videoWidth; c.h = v.videoHeight; c.hasVideo = c.w > 0 && /^video|\.(mp4|mov|webm|m4v|mkv)$/i.test(c.file.type || c.name);
+  c.st = 'Đang mở video…'; drawClips();
+  try { await Promise.race([once(v, 'loadedmetadata'), sleep(25000).then(() => { throw new Error('quá lâu'); })]); }
+  catch (e) { throw new Error('Chrome không mở được clip này. Nếu quay bằng điện thoại, vào Cài đặt camera → Mã hoá video → chọn H.264 / "Tương thích cao" rồi quay lại, hoặc gửi clip qua Zalo/Drive để được chuyển định dạng.'); }
+  c.dur = v.duration; c.w = v.videoWidth; c.h = v.videoHeight; c.hasVideo = c.w > 0 && /^video|\.(mp4|mov|webm|m4v|mkv|3gp)$/i.test(c.file.type || c.name);
   if (!isFinite(c.dur)) { v.currentTime = 1e9; await Promise.race([once(v, 'seeked').catch(() => {}), sleep(2500)]); c.dur = isFinite(v.duration) ? v.duration : NaN; try { v.currentTime = 0; } catch (e) {} }
-  c.prog = 0.1; drawClips();
-  try { c.audio = await actx().decodeAudioData(await c.file.arrayBuffer()); } catch (e) { c.audio = null; }
+  c.prog = 0.1;
+  const needAudio = forced !== 'broll';   // B-roll không dùng tiếng → bỏ qua bước đọc âm thanh (nhanh hơn nhiều)
+  if (needAudio) { c.st = 'Đang nghe âm thanh…'; drawClips(); try { c.audio = await actx().decodeAudioData(await c.file.arrayBuffer()); } catch (e) { c.audio = null; } }
   if (c.audio && !(c.dur > 0)) c.dur = c.audio.duration;
   if (!(c.dur > 0)) throw new Error('không đọc được độ dài');
-  if (c.audio) audioStats(c);
-  c.prog = 0.35; drawClips();
-  if (c.hasVideo) await frameStats(c, v, p => { c.prog = 0.35 + 0.65 * p; drawClipProg(c); });
+  if (c.audio) audioStats(c); else { c.voiced = []; c.voicedRatio = 0; c.dyn = 1; }
+  c.prog = 0.35; c.st = 'Đang xem hình…'; drawClips();
+  if (c.hasVideo) await frameStats(c, v, p => { c.prog = 0.35 + 0.65 * p; drawClipProg(c); }, forced === 'talk' ? 6 : 0);
   v.removeAttribute('src'); v.load();
+  if (forced) { if (forced === 'talk' && !c.hasVideo) c.kind = 'vo'; return; }
   if (!c.hasVideo) c.kind = 'vo';
   else c.kind = (c.audio && c.voicedRatio > 0.28 && c.dyn > 4.5) ? 'talk' : 'broll';
   if (c.kind === 'broll' && c.audio && c.voicedRatio > 0.45 && c.dyn > 3) c.kind = 'talk';
@@ -674,9 +707,9 @@ function audioStats(c) {
   const vr = vn ? Math.sqrt(vs / vn) : peak;
   c.gain = clamp(0.11 / Math.max(vr, 1e-4), 0.4, 5);
 }
-async function frameStats(c, v, onP) {
+async function frameStats(c, v, onP, nMax) {
   const cw = 36, chh = 64, cv = document.createElement('canvas'); cv.width = cw; cv.height = chh; const g = cv.getContext('2d', { willReadFrequently: true });
-  const N = clamp(Math.ceil(c.dur / 0.5), 4, 60), fr = []; let prev = null;
+  const N = nMax || clamp(Math.ceil(c.dur / 0.5), 4, 40), fr = []; let prev = null;
   for (let i = 0; i < N; i++) {
     const t = Math.min(c.dur - 0.05, (i + 0.5) * c.dur / N);
     v.currentTime = t; await Promise.race([once(v, 'seeked'), sleep(1500)]);
@@ -695,14 +728,15 @@ async function frameStats(c, v, onP) {
 const KIND = { talk: '🗣️ Người nói', broll: '📱 Cảnh quay', vo: '🎙️ Giọng thu', skip: '🚫 Bỏ qua' };
 function drawClips() {
   const el = $('#clips'); if (!el) return;
-  el.innerHTML = S.clips.map(c => `<div class="clip" data-id="${c.id}">
+  const order = { talk: 0, vo: 1, broll: 2, skip: 3, '': 4 }, head = { talk: '🗣️ A-roll', vo: '🎙️ Giọng thu', broll: '📱 B-roll', skip: '🚫 Bỏ qua', '': '⏳ Đang nhận loại' }; let lastK = null;
+  el.innerHTML = [...S.clips].sort((a, b) => (order[a.kind] ?? 4) - (order[b.kind] ?? 4) || a.id - b.id).map(c => `${c.kind !== lastK ? `<div class="lbl" style="margin-top:10px">${head[(lastK = c.kind)] || ''} (${S.clips.filter(x => x.kind === c.kind).length})</div>` : ''}<div class="clip" data-id="${c.id}">
     ${c.thumb ? `<img src="${c.thumb}">` : `<div class="ph">${c.kind === 'vo' ? '🎙️' : '🎞️'}</div>`}
     <div class="meta"><div class="nm" title="${esc(c.name)}">${esc(c.name)}</div>
-      <div class="st">${c.st ? esc(c.st) : `${fmt(c.dur)} · ${c.audio ? (c.voiced.length ? 'có giọng ' + Math.round(c.voicedRatio * 100) + '%' : (c.kind === 'vo' ? '<b style="color:var(--bad)">⚠️ không nghe thấy giọng</b>' : 'âm thanh nền')) : 'không tiếng'}${c.sents.length ? ' · ' + c.sents.length + ' câu' : ''}`}${c.audio && !c.hasVideo ? ` <a href="#" data-pl="${c.id}" style="color:#7ec3ff">▶ nghe</a>` : ''}</div>
+      <div class="st">${c.st ? esc(c.st) : `${fmt(c.dur)} · ${c.audio ? (c.voiced.length ? 'có giọng ' + Math.round(c.voicedRatio * 100) + '%' : (c.kind === 'vo' ? '<b style="color:var(--bad)">⚠️ không nghe thấy giọng</b>' : 'âm thanh nền')) : (c.kind === 'broll' ? 'cảnh quay' : 'không tiếng')}${c.sents.length ? ' · ' + c.sents.length + ' câu' : ''}`}${c.audio && !c.hasVideo ? ` <a href="#" data-pl="${c.id}" style="color:#7ec3ff">▶ nghe</a>` : ''}</div>
       ${c.st && !c.bad ? `<div class="bar"><i style="width:${Math.round(c.prog * 100)}%"></i></div>` : ''}</div>
     ${c.kind ? `<select data-k="${c.id}">${Object.entries(KIND).filter(([k]) => c.hasVideo ? k !== 'vo' : k === 'vo' || k === 'skip').map(([k, n]) => `<option value="${k}" ${c.kind === k ? 'selected' : ''}>${n}</option>`).join('')}</select>` : ''}
     <button class="x" data-del="${c.id}" title="Xoá">✕</button></div>`).join('');
-  el.querySelectorAll('select[data-k]').forEach(s => s.onchange = () => { S.clips.find(c => c.id == s.dataset.k).kind = s.value; drawSents(); refreshButtons(); drawSlots(); });
+  el.querySelectorAll('select[data-k]').forEach(s => s.onchange = () => { { const cc = S.clips.find(c => c.id == s.dataset.k); cc.kind = s.value; cc.userKind = true; } drawSents(); refreshButtons(); drawSlots(); });
   el.querySelectorAll('[data-pl]').forEach(a => a.onclick = e => { e.preventDefault(); const c = S.clips.find(x => x.id == a.dataset.pl); playSpan(c, 0, Math.min(c.dur, 8)); });
   el.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { S.clips = S.clips.filter(c => c.id != b.dataset.del); drawClips(); drawSents(); refreshButtons(); drawSlots(); });
 }
@@ -913,7 +947,29 @@ Chỉ trả JSON: {"segments":[...]}`;
   for (let i = 1; i < c.sents.length; i++) { const p = c.sents[i - 1], q = c.sents[i]; if (q.t0 < p.t1) { const m = (p.t1 + q.t0) / 2; p.t1 = Math.max(p.t0 + 0.2, m); q.t0 = Math.min(q.t1 - 0.2, m); p.words = splitWords(p.text, p.t0, p.t1); q.words = splitWords(q.text, q.t0, q.t1); } }
   c.autoCut = true; c.secKey = null; clearInterval(tick); btn.disabled = false;
   const cut = c.sents.filter(x => x.off); st.innerHTML = `✅ ${by}: giữ <b>${c.sents.length - cut.length}</b> đoạn, cắt <b>${cut.length}</b> đoạn (${cut.reduce((a, x) => a + x.t1 - x.t0, 0).toFixed(1)}s). Xem danh sách bên dưới – đoạn gạch đỏ là bị cắt, bấm 🗑 để giữ lại.`;
-  drawClips(); drawSents(); drawSlots(); if (S.variants.length) direct(false);
+  S.bmap = {}; drawClips(); drawSents(); await matchBroll(); drawSlots(); if (S.variants.length) direct(false);
+}
+
+/* ---------- Ghép B-roll thông minh theo lời thoại (không cần thứ tự) ---------- */
+function arollKept() { const a = S.clips.find(c => c.autoCut && !c.st); return a ? a.sents.filter(x => !x.off) : []; }
+async function matchBroll(manual) {
+  const segs = arollKept(), br = S.clips.filter(c => c.kind === 'broll' && !c.st);
+  if (!segs.length || !br.length) return;
+  const st = $('#bmSt'); if (st) st.textContent = '⏳ AI đang xem B-roll và ghép vào lời thoại…';
+  let place = null;
+  if (S.gemKey && br.every(c => c.keys && c.keys.length)) {
+    const parts = [{ text: `Lời thoại video TikTok (đã cắt sạch), đánh số đoạn:\n${segs.map((x, i) => `${i}: ${x.text || '(không rõ lời)'}`).join('\n')}\n\nDưới đây là ${br.length} clip B-roll (chỉ quay sản phẩm/vật, không có người nói), mỗi clip 3 khung hình. Hãy đặt MỖI B-roll vào 1 đoạn lời mà nó minh hoạ đúng nhất (B-roll hiện đúng thứ đang được nói tới). Quy tắc: mỗi đoạn tối đa 1 B-roll; hạn chế đặt vào đoạn 0 (câu mở đầu, nên thấy mặt người nói) và đoạn cuối (kêu gọi); B-roll không khớp rõ đoạn nào thì đặt vào đoạn còn trống hợp lý nhất để video luôn có hình minh hoạ. Trả JSON {"place":[{"clip":1,"seg":3,"why":"lý do ngắn tiếng Việt"}]}` }];
+    br.forEach((c, i) => { parts.push({ text: `B-roll ${i + 1}: ${c.name} (${c.dur.toFixed(1)}s)` }); c.keys.forEach(k => parts.push({ inline_data: { mime_type: 'image/jpeg', data: k.split(',')[1] } })); });
+    try { const o = await gemini(parts, 0.2); place = (Array.isArray(o) ? o : o.place || []).map(x => ({ c: br[+x.clip - 1], seg: +x.seg, why: x.why || '' })).filter(x => x.c && x.seg >= 0 && x.seg < segs.length); } catch (e) { if (st) st.textContent = '⚠️ AI chưa ghép được (' + String(e.message).slice(0, 60) + ') – ghép rải đều.'; }
+  }
+  if (!place || !place.length) {   // không có AI: rải đều B-roll vào các đoạn giữa
+    const mid = segs.map((x, i) => i).filter(i => i > 0 && i < segs.length - 1), pool = mid.length ? mid : segs.map((x, i) => i);
+    place = br.map((c, j) => ({ c, seg: pool[Math.min(pool.length - 1, Math.floor((j + 0.5) * pool.length / br.length))], why: 'rải đều (không có AI)' }));
+  }
+  S.bmap = {}; S.bwhy = {}; const taken = new Set();
+  place.forEach(x => { let k = x.seg; if (taken.has(k)) { const free = segs.map((z, i) => i).filter(i => !taken.has(i)); if (!free.length) return; k = free.reduce((b, i) => Math.abs(i - x.seg) < Math.abs(b - x.seg) ? i : b, free[0]); } taken.add(k); S.bmap[x.c.id] = segs[k].id; S.bwhy[x.c.id] = x.why; });
+  if (st) st.textContent = place.some(x => /rải đều/.test(x.why)) ? '✅ Đã ghép B-roll (rải đều – thêm key AI để ghép theo nội dung).' : '✅ AI đã ghép B-roll theo lời thoại.';
+  if (manual) { drawSlots(); if (S.variants.length) direct(false); }
 }
 
 /* ===================== KHO HIỆU ỨNG: Lottie + lớp phủ video ===================== */
@@ -1147,8 +1203,16 @@ function buildPlan(key, seed) {
     // 5) Hình: mặt người + chèn cảnh điện thoại (giọng vẫn chạy – L-cut)
     const cuts = [];
     units.forEach(u => { if (!u.c.hasVideo) cuts.push([u.t0, u.t1, 'force']); });
-    const scripted = SM || (brolls.length && secs.length && units.some(u => u.sec != null) && Object.keys(S.slots).length);
-    if (SM) {   // mỗi phần kịch bản = đúng hình đã chọn, giọng thu chạy xuyên suốt
+    const scripted = SM || Object.keys(S.bmap || {}).length || (brolls.length && secs.length && units.some(u => u.sec != null) && Object.keys(S.slots).length);
+    const BM = Object.keys(S.bmap || {}).length && talks.some(c => c.autoCut);
+    if (BM) {   // A-roll đã cắt: mỗi B-roll chèn vào đúng câu AI đã chọn
+      Object.entries(S.bmap).forEach(([cid, sid]) => { const c = brolls.find(x => x.id == cid); if (!c) return; const us = units.filter(u => u.sent.id === sid); if (!us.length) return;
+        const a = us[0].t0, b = us[us.length - 1].t1, s0 = snapToWord(a + (a < 0.5 ? 1.8 : (st.key === 'B' ? 0.4 : 0.6)), plan.words, 0.3);
+        let L = Math.min(c.dur - 0.3, 4.5, Math.max(b - s0, 2.2)); if (b - s0 - L > 0 && b - s0 - L < 1.1) L = Math.min(c.dur - 0.3, b - s0); L = Math.min(L, vEnd - s0);
+        if (L >= 0.9) cuts.push([s0, s0 + L, 'sec', us[0].sec, c, 0.15]); });
+      cuts.sort((x, y) => x[0] - y[0]); for (let i = 1; i < cuts.length; i++) if (cuts[i][0] < cuts[i - 1][1]) cuts[i - 1][1] = cuts[i][0];
+      plan.notes.push('Ghép B-roll theo đúng câu đang nói (AI xem hình + nghe lời).');
+    } else if (SM) {   // mỗi phần kịch bản = đúng hình đã chọn, giọng thu chạy xuyên suốt
       const faces = S.clips.filter(c => c.kind === 'talk' && c.hasVideo && !c.st); let faceCur = 0.1;
       secs.forEach((x, k) => {
         const su = units.filter(u => u.sec === k); if (!su.length) return;
