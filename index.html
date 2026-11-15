@@ -86,7 +86,7 @@ details.book summary{cursor:pointer;font-weight:700}details.book ol{padding-left
 <div id="app"></div>
 <script type="module">
 /* ===================== DỰNG VIDEO – OPPO MIỀN ĐÔNG (Đợt 1) ===================== */
-const VERSION = '2026.11.15-2130';
+const VERSION = '2026.11.15-2150';
 const W = 1080, H = 1920, FPS = 30;
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -473,11 +473,13 @@ function drawSlots() {
     if (S.slots[i] && S.slots[i] !== 'face' && !br.some(c => c.id == S.slots[i])) delete S.slots[i];
     if (S.slots[i] === 'face' && !faces.length) delete S.slots[i];
     if (S.slots[i] || S.slotsLocked) return;
-    if (faces.length && /HOOK|CTA|MỞ ĐẦU/.test(x.part)) { S.slots[i] = 'face'; return; }
+    if (faces.length && (!vc || vc.kind === 'talk') && /HOOK|CTA|MỞ ĐẦU/.test(x.part)) { S.slots[i] = 'face'; return; }
     while (k < br.length && used.has(br[k].id)) k++; if (k < br.length) { S.slots[i] = br[k].id; used.add(br[k].id); k++; }
   });
   const silentVo = S.clips.find(c => c.kind === 'vo' && !c.st && c.audio && !(c.voiced || []).length);
-  el.innerHTML = (silentVo && (!vc || vc.kind !== 'vo') ? `<p class="sub" style="color:var(--bad)">⚠️ File <b>${esc(silentVo.name)}</b> không có tiếng nói (micro không thu được). Thu lại – lúc thu thanh xanh phải nhảy khi bạn nói – hoặc ghi âm bằng điện thoại rồi kéo file vào ô Nguyên liệu.</p>` : '') + (vc ? `<p class="sub">🎙️ Giọng lời thoại: <b>${esc(vc.name)}</b> – web đã chia giọng theo từng phần (bấm ▶ để nghe kiểm tra).</p>` : '<p class="sub">⚠️ Chưa có giọng thu / clip có giọng nói. Bấm <b>🎙️ Thu giọng</b> và đọc liền cả kịch bản.</p>')
+  const hasT = S.clips.some(c => c.kind === 'talk' && c.audio && (c.voiced || []).length), hasV = S.clips.some(c => c.kind === 'vo' && c.audio && (c.voiced || []).length);
+  const pick = hasT && hasV ? `<div class="sub" style="margin-bottom:6px">Giọng lời thoại: <select id="vPick"><option value="talk" ${vc && vc.kind === 'talk' ? 'selected' : ''}>🗣️ Giọng trong clip A-roll (khớp miệng)</option><option value="vo" ${vc && vc.kind === 'vo' ? 'selected' : ''}>🎙️ Giọng thu riêng</option></select>${vc && vc.kind === 'vo' ? '<br><b style="color:var(--warn)">⚠️ Dùng giọng thu riêng thì các đoạn hiện mặt người sẽ không khớp miệng – nên chọn cảnh quay cho mọi phần.</b>' : ''}</div>` : '';
+  el.innerHTML = pick + (silentVo && (!vc || vc.kind !== 'vo') ? `<p class="sub" style="color:var(--bad)">⚠️ File <b>${esc(silentVo.name)}</b> không có tiếng nói (micro không thu được). Thu lại – lúc thu thanh xanh phải nhảy khi bạn nói – hoặc ghi âm bằng điện thoại rồi kéo file vào ô Nguyên liệu.</p>` : '') + (vc ? `<p class="sub">🎙️ Giọng lời thoại: <b>${esc(vc.name)}</b> – web đã chia giọng theo từng phần (bấm ▶ để nghe kiểm tra).</p>` : '<p class="sub">⚠️ Chưa có giọng thu / clip có giọng nói. Bấm <b>🎙️ Thu giọng</b> và đọc liền cả kịch bản.</p>')
     + P.sections.map((x, i) => { const parts = vc ? vc.sents.filter(z => !z.off && z.sec === i) : [], sp = parts.length ? { t0: parts[0].t0, t1: parts[parts.length - 1].t1, n: parts.length, len: parts.reduce((a, z) => a + z.t1 - z.t0, 0) } : null;
       return `<div class="slot ${S.slots[i] ? 'ok' : ''}"><span class="sn">${i + 1}</span><div style="flex:1;min-width:0"><div class="st2"><b>${esc(x.part)}</b> · ${esc(x.say)}</div>
       ${sp ? `<div class="sub" style="margin:2px 0 0">🎙️ ${fmt(sp.t0)}–${fmt(sp.t1)} (${sp.len.toFixed(1)}s${sp.n > 1 ? ', ' + sp.n + ' đoạn' : ''}) <a href="#" data-play="${i}" style="color:#7ec3ff">▶ nghe</a></div>` : (vc ? '<div class="sub" style="margin:2px 0 0;color:var(--warn)">⚠️ Chưa tìm thấy lời của phần này</div>' : '')}
@@ -486,6 +488,7 @@ function drawSlots() {
     + `<p class="sub" style="margin-top:6px">Web tự xếp clip theo thứ tự tên file (thứ tự quay). Sai cảnh nào thì chọn lại.</p>`
     + (br.length ? `<button class="btn sm ${S.gemKey ? 'pri' : ''}" id="aiSlots" style="margin-top:4px">🤖 AI xem hình & xếp cảnh</button><span id="aiSlotsSt" class="sub" style="margin-left:6px"></span>` : '');
   const ab = $('#aiSlots'); if (ab) ab.onclick = () => aiSlots(true);
+  const vp = $('#vPick'); if (vp) vp.onchange = () => { S.voicePick = vp.value; drawSlots(); if (S.variants.length) direct(false); };
   el.querySelectorAll('[data-play]').forEach(a => a.onclick = e => { e.preventDefault(); const k = +a.dataset.play; playParts(vc, vc.sents.filter(z => !z.off && z.sec === k).map(z => [z.t0, z.t1])); });
   el.querySelectorAll('[data-slot]').forEach(x => x.onchange = () => { S.slotsLocked = true; if (x.value === 'face') S.slots[x.dataset.slot] = 'face'; else if (x.value) S.slots[x.dataset.slot] = +x.value; else delete S.slots[x.dataset.slot]; drawSlots(); if (S.variants.length) direct(false); });
 }
@@ -1119,7 +1122,11 @@ function pickBroll(brolls, L, used, R, prefer, preferClip) {
 function snapToWord(t, words, lim) { let b = t, d = lim; words.forEach(w => { const x = Math.abs(w.t1 - t); if (x < d) { d = x; b = w.t1 + 0.02; } }); return b; }
 
 /* ===================== DỰNG THEO KỊCH BẢN: giọng thu → chia theo từng phần ===================== */
-function voiceSrc() { return S.clips.find(c => c.kind === 'vo' && c.audio && !c.st && (c.voiced || []).length) || S.clips.find(c => c.kind === 'talk' && c.audio && !c.st && (c.voiced || []).length) || null; }
+function voiceSrc() {
+  const ok = c => c.audio && !c.st && (c.voiced || []).length, talk = S.clips.find(c => c.kind === 'talk' && ok(c)), vo = S.clips.find(c => c.kind === 'vo' && ok(c));
+  if (S.voicePick === 'vo' && vo) return vo; if (S.voicePick === 'talk' && talk) return talk;
+  return talk || vo || null;   // mặc định: dùng giọng thật trong clip A-roll để khớp khẩu hình
+}
 function scriptMode() { return !!(S.plan.sections.length && voiceSrc()); }
 function splitVoice(c) {
   const secs = S.plan.sections, segs = c.voiced || []; if (!segs.length || !secs.length) return false;
@@ -1585,14 +1592,18 @@ const Player = {
     if (fromStart || this.t >= this.plan.dur - 0.05) this.t = 0;
     const src = ac.createBufferSource(); src.buffer = this.mix; src.connect(ac.destination); if (this.extraDest) src.connect(this.extraDest);
     this.t0c = ac.currentTime + 0.08; this.t0 = this.t; src.start(this.t0c, this.t); this.src = src; this.playing = true; $('#playBtn').textContent = '⏸';
-    const loop = () => { if (!this.playing) return; const t = this.t0 + (ac.currentTime - this.t0c); if (t >= this.plan.dur) { this.t = this.plan.dur; this.draw(this.t - 0.001); this.pause(); this.onEnd && this.onEnd(); return; } this.t = Math.max(this.t0, t); this.sync(this.t); this.draw(this.t); this.tick(); requestAnimationFrame(loop); };
+    const lat = this.extraDest ? 0 : Math.min(0.4, (ac.outputLatency || 0) + (ac.baseLatency || 0));
+    const loop = () => { if (!this.playing) return; const t = this.t0 + (ac.currentTime - lat - this.t0c); if (t >= this.plan.dur) { this.t = this.plan.dur; this.draw(this.t - 0.001); this.pause(); this.onEnd && this.onEnd(); return; } this.t = Math.max(this.t0, t); this.sync(this.t); this.draw(this.t); this.tick(); requestAnimationFrame(loop); };
     this.sync(this.t, true); requestAnimationFrame(loop);
   },
   pause() { if (this.src) { try { this.src.stop(); } catch (e) {} this.src.disconnect(); this.src = null; } this.playing = false; Object.values(this.pool).forEach(v => v.pause()); FXLIB.items.forEach(a => a.vid && a.vid.pause()); const b = $('#playBtn'); if (b) b.textContent = '▶'; },
   drive(v, want, hard, freeze) {
     if (freeze) { if (!v.paused) v.pause(); if (Math.abs(v.currentTime - want) > 0.1) v.currentTime = want; return; }
-    if (v.paused || hard) { if (Math.abs(v.currentTime - want) > 0.08) v.currentTime = want; v.play().catch(() => {}); }
-    else if (Math.abs(v.currentTime - want) > 0.3) v.currentTime = want;
+    if (v.paused || hard) { if (Math.abs(v.currentTime - want) > 0.04) v.currentTime = want; v.playbackRate = 1; v.play().catch(() => {}); return; }
+    const d = v.currentTime - want;   // lệch nhỏ: chỉnh tốc độ phát cho khớp dần; lệch lớn: nhảy tới đúng chỗ
+    if (Math.abs(d) > 0.25) { v.currentTime = want; v.playbackRate = 1; }
+    else if (Math.abs(d) > 0.025) v.playbackRate = clamp(1 - d * 3, 0.8, 1.2);
+    else if (v.playbackRate !== 1) v.playbackRate = 1;
   },
   sync(t, hard) {
     const sh = this.plan.shots, i = this.shotAt(t), s = sh[i], keep = new Set();
