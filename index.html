@@ -86,7 +86,7 @@ details.book summary{cursor:pointer;font-weight:700}details.book ol{padding-left
 <div id="app"></div>
 <script type="module">
 /* ===================== DỰNG VIDEO – OPPO MIỀN ĐÔNG (Đợt 1) ===================== */
-const VERSION = '2026.11.16-0730';
+const VERSION = '2026.11.16-0735';
 const W = 1080, H = 1920, FPS = 30;
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -573,7 +573,7 @@ function app() {
         <div class="row2"><button class="btn pri" id="asrBtn">🤖 Tạo phụ đề AI</button>
           <select class="inp" id="asrModel"><option value="Xenova/whisper-small">Chính xác (small)</option><option value="Xenova/whisper-base">Nhanh (base)</option></select></div>
         <div id="asrSt" class="sub" style="margin-top:6px"></div>
-        <div style="margin-top:8px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--card2)"><b>✂️ Clip dài có chỗ vấp?</b><p class="sub" style="margin:4px 0 6px">Quay liền 1 mạch, vấp thì nói lại – web nghe và tự cắt chỗ vấp, ừm à, câu nói lại, giữ lần nói trọn vẹn cuối cùng.${S.gemKey ? '' : ' <b>Nên có key AI Gemini</b> (bước 1) để cắt chính xác.'}</p>
+        <div style="margin-top:8px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--card2)"><b>✂️ Clip dài có chỗ vấp?</b><p class="sub" style="margin:4px 0 6px">Quay liền 1 mạch, vấp thì nói lại – web nghe và tự cắt chỗ vấp, ừm à, câu nói lại, giữ lần nói trọn vẹn cuối cùng. <b>Có key AI thì chỉ cần bấm nút này</b> – phụ đề tạo luôn, không cần bấm “Tạo phụ đề AI”.${S.gemKey ? '' : ' <b>Nên có key AI Gemini</b> (bước 1) để cắt chính xác.'}</p>
           <button class="btn pri" id="cutBtn">✂️ Tự cắt chỗ vấp</button> <span id="cutSt" class="sub"></span></div>
         <details style="margin-top:6px" ${S.opt.script ? 'open' : ''}><summary class="sub" style="cursor:pointer">✍️ Kịch bản để khớp vào giọng</summary>
           <textarea class="inp" id="script" placeholder="Mỗi câu một dòng.">${esc(S.opt.script)}</textarea>
@@ -818,8 +818,8 @@ async function to16k(buf) {
   const s = oc.createBufferSource(); s.buffer = buf; s.connect(oc.destination); s.start(); const r = await oc.startRendering(); return r.getChannelData(0);
 }
 async function runASR() {
-  const list = S.clips.filter(c => (c.kind === 'talk' || c.kind === 'vo') && c.audio);
-  if (!list.length) return toast('Chưa có clip người nói / giọng thu nào có tiếng.', true);
+  const list = S.clips.filter(c => (c.kind === 'talk' || c.kind === 'vo') && c.audio && !c.autoCut);
+  if (!list.length) return toast(S.clips.some(c => c.autoCut) ? 'Clip đã được ✂️ Tự cắt chỗ vấp – phụ đề đã có sẵn từ bước đó, không cần tạo lại.' : 'Chưa có clip người nói / giọng thu nào có tiếng.', true);
   const st = $('#asrSt'), btn = $('#asrBtn'); btn.disabled = true;
   try {
     for (const [i, c] of list.entries()) {
