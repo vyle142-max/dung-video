@@ -86,7 +86,7 @@ details.book summary{cursor:pointer;font-weight:700}details.book ol{padding-left
 <div id="app"></div>
 <script type="module">
 /* ===================== DỰNG VIDEO – OPPO MIỀN ĐÔNG (Đợt 1) ===================== */
-const VERSION = '2026.11.18-0300';
+const VERSION = '2026.11.18-0320';
 const W = 1080, H = 1920, FPS = 30;
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -271,9 +271,10 @@ async function gemModels() {
   store('vs_gem_models', JSON.stringify({ key: S.gemKey.slice(-6), at: Date.now(), list }));
   return list;
 }
-async function gemini(parts, temp, waitMs) {   // hỏi lần lượt (cách nhau 8s) nhiều đời AI, lấy kết quả đến trước
+async function gemini(parts, temp, waitMs, maxM, prefer) {   // hỏi lần lượt (cách nhau 8s) nhiều đời AI, lấy kết quả đến trước
   const body = JSON.stringify({ contents: [{ parts }], generationConfig: { responseMimeType: 'application/json', temperature: temp == null ? 1 : temp } });
-  let cands = (await gemModels()).slice(0, 4); if (!cands.includes('gemini-flash-latest')) cands.push('gemini-flash-latest');
+  let cands = (await gemModels()).slice(0, maxM || 4); if (!maxM && !cands.includes('gemini-flash-latest')) cands.push('gemini-flash-latest');
+  if (prefer) cands = prefer.concat(cands.filter(m => !prefer.includes(m)));
   const ctrls = [], errs = []; let done = false;
   const one = async (m, delay) => {
     await sleep(delay); if (done) throw new Error('skip');
@@ -291,9 +292,9 @@ async function gemini(parts, temp, waitMs) {   // hỏi lần lượt (cách nha
     const win = await Promise.any(cands.map((m, i) => one(m, i * 8000)));
     done = true; ctrls.forEach(c => c.abort());
     const rest = cands.filter(x => x !== win.m);
-    store('vs_gem_models', JSON.stringify({ key: S.gemKey.slice(-6), at: Date.now(), list: [win.m].concat(rest) }));
+    if (!/lite/.test(win.m) && !prefer) store('vs_gem_models', JSON.stringify({ key: S.gemKey.slice(-6), at: Date.now(), list: [win.m].concat(rest) }));
     return win.o;
-  } catch (e) { done = true; ctrls.forEach(c => c.abort()); store('vs_gem_models', null); throw new Error(errs.filter(x => !/skip/.test(x)).slice(-1)[0] || 'Không gọi được AI'); }
+  } catch (e) { done = true; ctrls.forEach(c => c.abort()); if (!prefer) store('vs_gem_models', null); throw new Error(errs.filter(x => !/skip/.test(x)).slice(-1)[0] || 'Không gọi được AI'); }
 }
 async function genScriptAI(P) {
   const prompt = `Bạn là đạo diễn TikTok cho chuỗi cửa hàng điện thoại OPPO ở Việt Nam. Viết kịch bản video TikTok dọc ${P.len} giây.
@@ -925,24 +926,32 @@ async function autoCut(c) {
   try {
     if (S.gemKey) {
       st.dataset.n = 'chuẩn bị âm thanh…';
-      const sr = c.audio.duration > 480 ? 8000 : 16000; const wav = wav16(await toRate(c.audio, sr), sr);
-      if (wav.byteLength > 18e6) throw new Error('clip quá dài cho AI (tối đa ~15 phút)');
-      st.dataset.n = 'AI đang nghe clip…';
-      const prompt = `Đây là ghi âm 1 người nói tiếng Việt khi quay video TikTok, dài ${c.audio.duration.toFixed(1)} giây. Người nói có thể vấp, ấp úng, nói hỏng rồi nói lại, nói chen "ừm, à", hoặc nói ngoài lề ("quay lại", "sai rồi") nhưng không dừng máy.
-${secs.length ? 'Kịch bản dự kiến (đánh số phần):\n' + secs.map((x, k) => k + ': ' + x.say).join('\n') + '\n' : ''}Hãy chép lại TOÀN BỘ lời nói, chia thành các đoạn liên tục (mỗi đoạn là 1 câu hoặc 1 cụm, ngắt ở chỗ người nói dừng/ngập ngừng). Mỗi đoạn trả:
-- "s","e": thời điểm bắt đầu/kết thúc tính bằng GIÂY (số thập phân, chính xác nhất có thể),
-- "text": lời nói đúng như nghe được,
-- "keep": true nếu nên giữ trong video; false nếu là: câu nói hỏng/bỏ dở, lần nói trước của một câu được nói lại sau đó (luôn GIỮ lần nói trọn vẹn CUỐI CÙNG), từ đệm đứng riêng (ừm, à, ờ), nói nhầm, nói ngoài lề,
-- "reason": nếu keep=false thì 1 trong: "vấp", "nói lại", "ừm à", "ngoài lề", "dở dang",
-- "sec": ${secs.length ? 'số thứ tự phần kịch bản mà đoạn này thuộc về' : 'null'}.
-Chỉ trả JSON: {"segments":[...]}`;
-      const o = await gemini([{ text: prompt }, { inline_data: { mime_type: 'audio/wav', data: b64(wav) } }], 0.1, 150000);
-      const arr = Array.isArray(o) ? o : (o.segments || []);
-      segs = arr.map(x => ({ s: +x.s || +x.start || 0, e: +x.e || +x.end || 0, text: cleanText(x.text || ''), keep: x.keep !== false, reason: x.reason || '', sec: x.sec == null || x.sec === '' ? null : +x.sec })).filter(x => x.e > x.s && x.s < c.audio.duration + 1);
+      const pcm = await toRate(c.audio, 16000), D = c.audio.duration;
+      // chia khúc ~25s, cắt đúng chỗ ngừng nói
+      const gaps = []; (c.voiced || []).forEach((v, i, a) => { if (i) gaps.push((a[i - 1].t1 + v.t0) / 2); });
+      const bounds = [0]; while (D - bounds[bounds.length - 1] > 32) { const want = bounds[bounds.length - 1] + 25; const g = gaps.filter(x => x > want - 7 && x < want + 7).sort((x, y) => Math.abs(x - want) - Math.abs(y - want))[0]; bounds.push(g || want); } bounds.push(D);
+      const chunks = []; for (let i = 0; i < bounds.length - 1; i++) chunks.push({ a: bounds[i], b: bounds[i + 1] });
+      let done = 0; st.dataset.n = `AI đang nghe 0/${chunks.length} khúc…`;
+      const tPrompt = len => `Đây là 1 đoạn ghi âm tiếng Việt dài ${len.toFixed(1)} giây (người nói quay video, có thể vấp, ấp úng, nói lại). Hãy chép lại TOÀN BỘ lời nói (kể cả câu nói hỏng, "ừm", "à"), chia thành các đoạn liên tục – mỗi đoạn 1 câu hoặc 1 cụm, ngắt ở chỗ người nói dừng hoặc nói lại. Mỗi đoạn: "s","e" = giây bắt đầu/kết thúc trong đoạn ghi âm này (số thập phân, chính xác nhất có thể), "text" = lời nói đúng như nghe. Chỉ trả JSON {"segments":[{"s":0.0,"e":0.0,"text":""}]}`;
+      const all = []; let ci = 0;
+      const work = async () => { while (ci < chunks.length) { const k = chunks[ci++], o0 = Math.round(k.a * 16000), o1 = Math.round(k.b * 16000);
+        const wav = wav16(pcm.subarray(o0, o1), 16000);
+        const o = await gemini([{ text: tPrompt(k.b - k.a) }, { inline_data: { mime_type: 'audio/wav', data: b64(wav) } }], 0.1, 45000, 1, ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite']);
+        (Array.isArray(o) ? o : o.segments || []).forEach(x => { const s0 = +x.s || +x.start || 0, e0 = +x.e || +x.end || 0; if (e0 > s0) all.push({ s: k.a + s0, e: Math.min(k.b, k.a + e0), text: cleanText(x.text || '') }); });
+        done++; st.dataset.n = `AI đang nghe ${done}/${chunks.length} khúc…`; } };
+      await Promise.all([work(), work()]);
+      all.sort((x, y) => x.s - y.s);
+      if (!all.length) throw new Error('AI không chép được lời');
+      // bước 2: AI đọc toàn bộ lời đã chép và quyết định giữ / cắt
+      st.dataset.n = 'AI đang quyết định cắt chỗ nào…';
+      const dPrompt = `Lời nói (đã chép, theo thứ tự thời gian) của 1 video TikTok tiếng Việt quay liền 1 mạch, người nói có thể vấp và nói lại:\n${all.map((x, i) => `${i}: ${x.text || '(không rõ)'}`).join('\n')}\n${secs.length ? '\nKịch bản dự kiến (đánh số phần):\n' + secs.map((x, k) => k + ': ' + x.say).join('\n') + '\n' : ''}\nVới MỖI đoạn, quyết định giữ hay cắt. Cắt (keep=false) khi: câu nói hỏng/bỏ dở; là lần nói trước của một câu được nói lại phía sau (LUÔN giữ lần nói trọn vẹn CUỐI CÙNG); từ đệm đứng riêng (ừm, à, ờ); nói nhầm; nói ngoài lề ("quay lại", "sai rồi", "làm lại"). Nếu 1 đoạn chứa phần nói hỏng ở đầu rồi nói lại đúng ngay trong cùng đoạn thì vẫn giữ. Trả JSON {"d":[{"i":0,"keep":true,"reason":"vấp|nói lại|ừm à|ngoài lề|dở dang","sec":${secs.length ? 'số phần kịch bản' : 'null'}}]}`;
+      let dec = []; try { const o = await gemini([{ text: dPrompt }], 0.1, 60000, 2, ['gemini-3.5-flash', 'gemini-3.5-flash-lite']); dec = Array.isArray(o) ? o : (o.d || o.decisions || []); } catch (e) { dec = []; }
+      segs = all.map((x, i) => { const d = dec.find(z => +z.i === i) || {}; return { ...x, keep: d.keep !== false, reason: d.reason || '', sec: d.sec == null || d.sec === '' ? null : +d.sec }; });
+      if (!dec.length) segs = ruleCut(c, segs.map(x => ({ s: x.s, e: x.e, text: x.text })));
       if (!segs.length) throw new Error('AI không chép được lời');
       by = 'AI Gemini';
     }
-  } catch (e) { toast('AI chưa nghe được (' + esc(String(e.message).slice(0, 100)) + ') – dùng cách cắt theo luật.', true, 8000); segs = null; }
+  } catch (e) { console.warn('autocut', e); toast('AI chưa nghe được (' + esc(String(e.message).slice(0, 100)) + ') – dùng cách cắt theo luật. Thử lại sau 1–2 phút (bản miễn phí đôi khi quá tải).', true, 9000); segs = null; }
   if (!segs) {   // dự phòng: dùng phụ đề AI trên máy (nếu đã chạy) hoặc các cụm có giọng
     const base = c.sents.length && !c.autoCut && c.sents.some(x => x.text) ? c.sents.map(x => ({ s: x.t0, e: x.t1, text: x.text })) : phrasesOf(c).map(x => ({ s: x.t0, e: x.t1, text: '' }));
     segs = ruleCut(c, base); by = 'luật (không AI)';
